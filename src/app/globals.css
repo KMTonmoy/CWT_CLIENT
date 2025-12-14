@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+ *{
+    font-family: "Hind Siliguri", sans-serif;
+ }
+
+
+  html {
+    scroll-behavior: smooth;
+ }
+
+ body {
+    transition: opacity 0.2s ease-in-out;
+ }
+
+ /* Improve button/input tap feedback */
+ button,
+ a,
+ [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+ }
+
+ /* Smooth scrolling */
+ @media (prefers-reduced-motion: no-preference) {
+    html {
+       scroll-behavior: smooth;
+    }
+ }
