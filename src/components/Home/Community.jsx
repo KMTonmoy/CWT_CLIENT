@@ -62,7 +62,7 @@ const Community = () => {
     "https://wa.me/8801622564462?text=আমি%20CodeWithTonmoy%20এর%20ওয়াটসঅ্যাপ%20গ্রুপে%20জয়েন%20করতে%20চাই";
 
   return (
-    <div className="relative py-12 md:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#0B1221] to-[#07101B] overflow-hidden">
+    <div className="relative py-12 md:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
       <div className="absolute inset-0 z-0" />
 
       <div className="relative z-10 max-w-7xl mx-auto">
