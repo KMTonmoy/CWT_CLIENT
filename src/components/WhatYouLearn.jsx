@@ -20,10 +20,12 @@ const WhatYouLearn = () => {
     ];
 
     useEffect(() => {
-        setIsMounted(true);
+        // setIsMounted(true);
+    }, []);
 
+    useEffect(() => {
         // Only run Three.js on client side
-        if (typeof window === 'undefined') return;
+        if (!isMounted || typeof window === 'undefined') return;
 
         let scene, camera, renderer, mesh;
         let animationFrameId;
@@ -129,7 +131,7 @@ const WhatYouLearn = () => {
             renderer = null;
             mesh = null;
         };
-    }, []);
+    }, [isMounted]);
 
     const container = {
         hidden: { opacity: 0 },
