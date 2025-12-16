@@ -153,7 +153,7 @@ const WhatYouLearn = () => {
 
     if (!isMounted) {
         return (
-            <div className="relative py-16 px-4 sm:px-6 lg:px-8 bg-[#0B1221] overflow-hidden">
+            <div className="relative py-16 px-4 sm:px-6 lg:px-8  overflow-hidden">
                 <div className="relative z-10">
                     <h1 className="text-center text-4xl font-bold text-[#f1f5f9] mb-10">
                         এই কোর্সে তুমি কী শিখবে?
@@ -174,7 +174,7 @@ const WhatYouLearn = () => {
     }
 
     return (
-        <div className="relative py-16 px-4 sm:px-6 lg:px-8 bg-[#0B1221] overflow-hidden">
+        <div className="relative py-16 px-4 sm:px-6 lg:px-8  overflow-hidden">
             {/* Three.js container */}
             <div ref={mountRef} className="absolute inset-0 z-0 pointer-events-none" />
 

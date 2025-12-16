@@ -103,7 +103,7 @@ const Curriculum = () => {
   }, [])
 
   return (
-    <div className="relative bg-[#0B1221] py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <div className="relative  py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
       {/* Three.js container (fixed background) */}
       <div  className="fixed inset-0 z-0" />
       

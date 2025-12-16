@@ -1,26 +1,34 @@
-"use client"
-import React from 'react';
+"use client";
+import React from "react";
 import {
-  FaFacebook, FaYoutube, FaLinkedin, FaGithub,
-  FaEnvelope, FaPhone, FaMapMarkerAlt, FaExternalLinkAlt
-} from 'react-icons/fa';
-import { RiSecurePaymentLine, RiVerifiedBadgeFill } from 'react-icons/ri';
-import { SiGooglemaps } from 'react-icons/si';
-import { motion } from 'framer-motion';
+  FaFacebook,
+  FaYoutube,
+  FaLinkedin,
+  FaGithub,
+  FaEnvelope,
+  FaPhone,
+  FaMapMarkerAlt,
+  FaExternalLinkAlt,
+} from "react-icons/fa";
+import { RiSecurePaymentLine, RiVerifiedBadgeFill } from "react-icons/ri";
+import { SiGooglemaps } from "react-icons/si";
+import { motion } from "framer-motion";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   // Payment method logos (optimized URLs)
   const paymentLogos = {
-    bKash: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/BKash.svg/1280px-BKash.svg.png",
-    nagad: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Nagad_Logo.svg/1280px-Nagad_Logo.svg.png",
-    sslcommerz: "https://www.sslcommerz.com/wp-content/uploads/2021/08/SSL-Commerz-Logo-01.png"
+    bKash:
+      "https://play-lh.googleusercontent.com/1CRcUfmtwvWxT2g-xJF8s9_btha42TLi6Lo-qVkVomXBb_citzakZX9BbeY51iholWs=w240-h480-rw",
+    nagad:
+      "https://play-lh.googleusercontent.com/EQC9NtbtRvsNcU1r_5Dr8pWm3hPfN3OjGjzkOqzCEPDJvqBGKyfU9-a2ajNtcrIg1rs",
+    sslcommerz: "https://sslcommerz.com/wp-content/uploads/2021/11/logo.png",
   };
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
+    visible: { opacity: 1, y: 0 },
   };
 
   return (
@@ -31,7 +39,6 @@ const Footer = () => {
       <div className="container mx-auto px-4 sm:px-6 py-12">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-
           {/* Brand Section - Enhanced */}
           <motion.div
             variants={fadeInUp}
@@ -52,7 +59,9 @@ const Footer = () => {
                 <h3 className="text-2xl font-bold bg-gradient-to-r from-[#07A8ED] to-[#3B82F6] bg-clip-text text-transparent">
                   CodeWithTonmoy
                 </h3>
-                <p className="text-xs text-[#94A3B8]">Bangla Web Development Hub</p>
+                <p className="text-xs text-[#94A3B8]">
+                  Bangla Web Development Hub
+                </p>
               </div>
             </div>
 
@@ -66,17 +75,38 @@ const Footer = () => {
               <p className="text-sm font-medium mb-3">Follow Us</p>
               <div className="flex space-x-3">
                 {[
-                  { icon: <FaFacebook size={22} />, color: "hover:text-[#1877F2]", label: "Facebook" },
-                  { icon: <FaYoutube size={22} />, color: "hover:text-[#FF0000]", label: "YouTube" },
-                  { icon: <FaLinkedin size={22} />, color: "hover:text-[#0A66C2]", label: "LinkedIn" },
-                  { icon: <FaGithub size={22} />, color: "hover:text-white", label: "GitHub" }
+                  {
+                    icon: <FaFacebook size={22} />,
+                    color: "hover:text-[#1877F2]",
+                    label: "Facebook",
+                  },
+                  {
+                    icon: <FaYoutube size={22} />,
+                    color: "hover:text-[#FF0000]",
+                    label: "YouTube",
+                  },
+                  {
+                    icon: <FaLinkedin size={22} />,
+                    color: "hover:text-[#0A66C2]",
+                    label: "LinkedIn",
+                  },
+                  {
+                    icon: <FaGithub size={22} />,
+                    color: "hover:text-white",
+                    label: "GitHub",
+                  },
                 ].map((social, idx) => (
                   <motion.a
                     key={idx}
                     href="#"
                     whileHover={{ scale: 1.1, y: -3 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`bg-[#1E293B] p-2.5 rounded-full text-[#E5E7EB] ${social.color} transition-all duration-300 hover:shadow-lg hover:shadow-${social.color.replace('hover:text-', '')}/20`}
+                    className={`bg-[#1E293B] p-2.5 rounded-full text-[#E5E7EB] ${
+                      social.color
+                    } transition-all duration-300 hover:shadow-lg hover:shadow-${social.color.replace(
+                      "hover:text-",
+                      ""
+                    )}/20`}
                     aria-label={social.label}
                   >
                     {social.icon}
@@ -106,15 +136,20 @@ const Footer = () => {
                 { name: "আমাদের সম্পর্কে", icon: "👥" },
                 { name: "ব্লগ", icon: "✍️" },
                 { name: "যোগাযোগ", icon: "📞" },
-                { name: "প্রাইভেসি পলিসি", icon: "🔒" }
+                { name: "প্রাইভেসি পলিসি", icon: "🔒" },
               ].map((link, idx) => (
                 <motion.li
                   key={idx}
                   whileHover={{ x: 5 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
-                  <a href="#" className="flex items-center text-sm hover:text-[#07A8ED] transition-colors group">
-                    <span className="mr-2 opacity-0 group-hover:opacity-100 transition-opacity">{link.icon}</span>
+                  <a
+                    href="#"
+                    className="flex items-center text-sm hover:text-[#07A8ED] transition-colors group"
+                  >
+                    <span className="mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {link.icon}
+                    </span>
                     <span>{link.name}</span>
                     <FaExternalLinkAlt className="ml-auto text-xs opacity-0 group-hover:opacity-100 transition-opacity" />
                   </a>
@@ -135,19 +170,38 @@ const Footer = () => {
             <h3 className="text-xl font-bold text-white flex items-center">
               <RiSecurePaymentLine className="mr-3 text-[#07A8ED]" />
               পেমেন্ট মাধ্যম
-              <span className="ml-2 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">সুরক্ষিত</span>
+              <span className="ml-2 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
+                সুরক্ষিত
+              </span>
             </h3>
 
             <div className="grid grid-cols-2 gap-4">
               {[
-                { name: "bKash", logo: paymentLogos.bKash, color: "border-pink-500/30" },
-                { name: "Nagad", logo: paymentLogos.nagad, color: "border-red-500/30" },
-                { name: "SSLCOMMERZ", logo: paymentLogos.sslcommerz, color: "border-blue-500/30", span: "col-span-2" }
+                {
+                  name: "bKash",
+                  logo: paymentLogos.bKash,
+                  color: "border-pink-500/30",
+                },
+                {
+                  name: "Nagad",
+                  logo: paymentLogos.nagad,
+                  color: "border-red-500/30",
+                },
+                {
+                  name: "SSLCOMMERZ",
+                  logo: paymentLogos.sslcommerz,
+                  color: "border-blue-500/30",
+                  span: "col-span-2",
+                },
               ].map((method, idx) => (
                 <motion.div
                   key={idx}
                   whileHover={{ scale: 1.05 }}
-                  className={`bg-gradient-to-br from-[#1E293B] to-[#0F172A] p-4 rounded-xl border ${method.color} ${method.span || ''} flex flex-col items-center justify-center`}
+                  className={`bg-gradient-to-br from-[#1E293B] to-[#0F172A] p-4 rounded-xl border ${
+                    method.color
+                  } ${
+                    method.span || ""
+                  } flex flex-col items-center justify-center`}
                 >
                   <img
                     src={method.logo}
@@ -256,21 +310,27 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-8">
               <p className="text-sm text-[#94A3B8]">
-                &copy; {currentYear} <span className="text-[#07A8ED] font-semibold">CodeWithTonmoy</span>. সর্বস্বত্ব সংরক্ষিত।
+                &copy; {currentYear}{" "}
+                <span className="text-[#07A8ED] font-semibold">
+                  CodeWithTonmoy
+                </span>
+                . সর্বস্বত্ব সংরক্ষিত।
               </p>
 
               <div className="flex items-center space-x-4">
                 <div className="w-1 h-1 bg-[#94A3B8] rounded-full"></div>
                 <div className="flex space-x-4">
-                  {["প্রাইভেসি পলিসি", "টার্মস", "কুকি সেটিংস"].map((item, idx) => (
-                    <a
-                      key={idx}
-                      href="#"
-                      className="text-xs text-[#94A3B8] hover:text-[#07A8ED] transition-colors"
-                    >
-                      {item}
-                    </a>
-                  ))}
+                  {["প্রাইভেসি পলিসি", "টার্মস", "কুকি সেটিংস"].map(
+                    (item, idx) => (
+                      <a
+                        key={idx}
+                        href="#"
+                        className="text-xs text-[#94A3B8] hover:text-[#07A8ED] transition-colors"
+                      >
+                        {item}
+                      </a>
+                    )
+                  )}
                 </div>
               </div>
             </div>
@@ -278,7 +338,6 @@ const Footer = () => {
             <div className="mt-6 md:mt-0">
               <div className="flex items-center space-x-2 text-xs text-[#94A3B8]">
                 <span>Made with ❤️ in Bangladesh</span>
-                
               </div>
             </div>
           </div>
