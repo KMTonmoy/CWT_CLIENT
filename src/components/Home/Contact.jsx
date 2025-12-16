@@ -1,11 +1,10 @@
 "use client";
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   FaWhatsapp,
   FaPhoneAlt,
   FaEnvelope,
-  FaMapMarkerAlt,
   FaClock,
   FaPaperPlane,
   FaUser,
@@ -250,7 +249,7 @@ const Contact = () => {
                   onChange={handleChange}
                   required
                   rows="4"
-                  className="w-full px-4 py-3 bg-[#0B1221] border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#07A8ED] transition-colors resize-none"
+                  className="w-full px-4 py-3 bg-[#0B1221] border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#07A8ED] transition-colors"
                   placeholder="আপনার প্রশ্ন বা মেসেজ লিখুন..."
                 />
               </div>
