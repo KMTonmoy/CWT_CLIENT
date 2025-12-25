@@ -3,7 +3,10 @@ import React, { useState, useEffect, useContext, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { AuthContext } from '@/AuthProvider/AuthProvider'
 import axios from 'axios'
-import { FiCamera, FiUpload, FiSave, FiEdit, FiX } from 'react-icons/fi'
+import { 
+  FiCamera, FiUpload, FiSave, FiEdit, FiX, 
+  FiMail, FiCheck, FiClock, FiAlertCircle 
+} from 'react-icons/fi'
 
 const Profile = () => {
   const { user } = useContext(AuthContext)
@@ -14,7 +17,22 @@ const Profile = () => {
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [message, setMessage] = useState({ type: '', text: '' })
+  
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false)
+  const [verificationCode, setVerificationCode] = useState('')
+  const [verificationStatus, setVerificationStatus] = useState({
+    isVerified: false,
+    isPending: false,
+    attemptsLeft: 4,
+    cooldownUntil: null
+  })
+  const [showVerificationModal, setShowVerificationModal] = useState(false)
+  const [isSendingCode, setIsSendingCode] = useState(false)
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false)
+  const [countdown, setCountdown] = useState(0)
+  
   const fileInputRef = useRef(null)
+  const codeInputRef = useRef(null)
 
   const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
   const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
@@ -23,8 +41,17 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       fetchProfileData()
+      checkVerificationStatus()
     }
   }, [user])
+
+  useEffect(() => {
+    let timer
+    if (countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000)
+    }
+    return () => clearTimeout(timer)
+  }, [countdown])
 
   const fetchProfileData = async () => {
     try {
@@ -41,18 +68,164 @@ const Profile = () => {
     }
   }
 
-  // Handle photo upload directly to Cloudinary
+  const checkVerificationStatus = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/email/verification-status/${user.uid}`)
+      if (response.data.success) {
+        setVerificationStatus({
+          isVerified: response.data.isVerified,
+          isPending: response.data.isPending,
+          attemptsLeft: response.data.attemptsLeft,
+          cooldownUntil: response.data.cooldownUntil
+        })
+        
+        if (response.data.cooldownUntil) {
+          const cooldownMs = new Date(response.data.cooldownUntil) - new Date()
+          if (cooldownMs > 0) {
+            setCountdown(Math.ceil(cooldownMs / 1000))
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking verification status:', error)
+    }
+  }
+
+  const sendVerificationCode = async () => {
+    try {
+      setIsSendingCode(true)
+      setMessage({ type: '', text: '' })
+
+      const response = await axios.post(`${BASE_URL}/api/email/send-verification`, {
+        email: profileData.email,
+        userId: user.uid,
+        userName: profileData.name
+      })
+
+      if (response.data.success) {
+        setMessage({ 
+          type: 'success', 
+          text: `Verification code sent to ${profileData.email}` 
+        })
+        setShowVerificationModal(true)
+        setVerificationStatus(prev => ({
+          ...prev,
+          isPending: true,
+          attemptsLeft: 4
+        }))
+        
+        setTimeout(() => {
+          if (codeInputRef.current) {
+            codeInputRef.current.focus()
+          }
+        }, 100)
+      }
+    } catch (error) {
+      console.error('Error sending verification code:', error)
+      setMessage({ 
+        type: 'error', 
+        text: error.response?.data?.message || 'Failed to send verification code' 
+      })
+      
+      if (error.response?.data?.cooldownUntil) {
+        const cooldownMs = new Date(error.response.data.cooldownUntil) - new Date()
+        if (cooldownMs > 0) {
+          setCountdown(Math.ceil(cooldownMs / 1000))
+          setVerificationStatus(prev => ({
+            ...prev,
+            cooldownUntil: error.response.data.cooldownUntil
+          }))
+        }
+      }
+    } finally {
+      setIsSendingCode(false)
+    }
+  }
+
+  const verifyCode = async () => {
+    if (verificationCode.length !== 6) {
+      setMessage({ type: 'error', text: 'Please enter a 6-digit code' })
+      return
+    }
+
+    try {
+      setIsVerifyingCode(true)
+      setMessage({ type: '', text: '' })
+
+      const response = await axios.post(`${BASE_URL}/api/email/verify-code`, {
+        email: profileData.email,
+        code: verificationCode,
+        userId: user.uid
+      })
+
+      if (response.data.success) {
+        setMessage({ 
+          type: 'success', 
+          text: 'Email verified successfully!' 
+        })
+        setVerificationStatus({
+          isVerified: true,
+          isPending: false,
+          attemptsLeft: 4,
+          cooldownUntil: null
+        })
+        setShowVerificationModal(false)
+        setVerificationCode('')
+        
+        setProfileData(prev => ({
+          ...prev,
+          emailVerified: true
+        }))
+      }
+    } catch (error) {
+      console.error('Error verifying code:', error)
+      const errorMessage = error.response?.data?.message || 'Invalid verification code'
+      setMessage({ type: 'error', text: errorMessage })
+      
+      if (error.response?.data?.attemptsLeft !== undefined) {
+        setVerificationStatus(prev => ({
+          ...prev,
+          attemptsLeft: error.response.data.attemptsLeft
+        }))
+      }
+      
+      if (error.response?.data?.cooldownUntil) {
+        const cooldownMs = new Date(error.response.data.cooldownUntil) - new Date()
+        if (cooldownMs > 0) {
+          setCountdown(Math.ceil(cooldownMs / 1000))
+          setVerificationStatus(prev => ({
+            ...prev,
+            cooldownUntil: error.response.data.cooldownUntil
+          }))
+          setShowVerificationModal(false)
+        }
+      }
+      
+      setVerificationCode('')
+      if (codeInputRef.current) {
+        codeInputRef.current.focus()
+      }
+    } finally {
+      setIsVerifyingCode(false)
+    }
+  }
+
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0]
     if (!file) return
 
-    // Check file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       setMessage({ type: 'error', text: 'File size should be less than 10MB' })
       return
     }
 
-    // Check file type
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
     if (!validTypes.includes(file.type)) {
       setMessage({ type: 'error', text: 'Only image files (JPG, PNG, GIF, WebP) are allowed' })
@@ -63,14 +236,12 @@ const Profile = () => {
       setUploadingPhoto(true)
       setUploadProgress(0)
 
-      // Create FormData for Cloudinary upload
       const formData = new FormData()
       formData.append('file', file)
       formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
       formData.append('cloud_name', CLOUDINARY_CLOUD_NAME)
       formData.append('folder', 'cwt-profiles')
 
-      // Upload to Cloudinary
       const response = await axios.post(
         `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
         formData,
@@ -86,7 +257,6 @@ const Profile = () => {
       )
 
       if (response.data.secure_url) {
-        // Update profile with new photo URL
         const updateResponse = await axios.patch(
           `${BASE_URL}/api/users/uid/${user.uid}`,
           { photoURL: response.data.secure_url }
@@ -115,7 +285,6 @@ const Profile = () => {
     }
   }
 
-  // Trigger file input click
   const triggerFileInput = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click()
@@ -147,7 +316,6 @@ const Profile = () => {
       setSaving(true)
       setMessage({ type: '', text: '' })
 
-      // Update timestamps
       const dataToSend = {
         ...profileData,
         updatedAt: new Date().toISOString()
@@ -161,7 +329,6 @@ const Profile = () => {
       if (response.data.success) {
         setMessage({ type: 'success', text: 'Profile updated successfully!' })
         setIsEditing(false)
-        // Refresh profile data
         fetchProfileData()
       }
     } catch (error) {
@@ -190,7 +357,6 @@ const Profile = () => {
     }
   }
 
-  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 flex items-center justify-center">
@@ -221,7 +387,6 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -267,7 +432,6 @@ const Profile = () => {
           </div>
         </motion.div>
 
-        {/* Message Alert */}
         {message.text && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -284,16 +448,13 @@ const Profile = () => {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Profile Overview */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Profile Card */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-6"
             >
               <div className="flex flex-col items-center">
-                {/* Profile Photo Section */}
                 <div className="relative group mb-6">
                   <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-blue-500/30 shadow-lg">
                     {profileData.photoURL ? (
@@ -311,7 +472,6 @@ const Profile = () => {
                     )}
                   </div>
                   
-                  {/* Upload Button */}
                   <button
                     onClick={triggerFileInput}
                     disabled={uploadingPhoto}
@@ -325,7 +485,6 @@ const Profile = () => {
                     )}
                   </button>
 
-                  {/* Hidden File Input */}
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -335,7 +494,6 @@ const Profile = () => {
                   />
                 </div>
                 
-                {/* Upload Progress */}
                 {uploadingPhoto && (
                   <div className="w-full mb-4">
                     <div className="flex justify-between text-sm text-gray-400 mb-1">
@@ -351,7 +509,6 @@ const Profile = () => {
                   </div>
                 )}
                 
-                {/* User Info */}
                 <h2 className="text-2xl font-bold text-white mb-1">
                   {profileData.name}
                 </h2>
@@ -370,7 +527,6 @@ const Profile = () => {
                   </span>
                 </div>
 
-                {/* Stats */}
                 <div className="w-full space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400">Member Since</span>
@@ -392,7 +548,6 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {/* Upload Photo Button for Mobile */}
                 <button
                   onClick={triggerFileInput}
                   disabled={uploadingPhoto}
@@ -404,7 +559,6 @@ const Profile = () => {
               </div>
             </motion.div>
 
-            {/* Quick Stats Card */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -437,7 +591,6 @@ const Profile = () => {
             </motion.div>
           </div>
 
-          {/* Right Column - Profile Details */}
           <div className="lg:col-span-2">
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -447,7 +600,75 @@ const Profile = () => {
               <h3 className="text-2xl font-bold text-white mb-6">Personal Information</h3>
 
               <div className="space-y-8">
-                {/* Personal Info Section */}
+                <div className="mb-6">
+                  <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">Email Verification</h4>
+                  <div className="bg-gray-800/30 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-full ${verificationStatus.isVerified ? 'bg-green-500/20' : 'bg-yellow-500/20'}`}>
+                          {verificationStatus.isVerified ? (
+                            <FiCheck className="text-green-400" size={20} />
+                          ) : (
+                            <FiMail className="text-yellow-400" size={20} />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-white font-medium">{profileData.email}</p>
+                          <p className={`text-sm ${verificationStatus.isVerified ? 'text-green-400' : 'text-yellow-400'}`}>
+                            {verificationStatus.isVerified 
+                              ? '✓ Email verified' 
+                              : verificationStatus.isPending
+                                ? '⏳ Verification pending'
+                                : '⚠️ Email not verified'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {!verificationStatus.isVerified && (
+                        <button
+                          onClick={sendVerificationCode}
+                          disabled={isSendingCode || countdown > 0}
+                          className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors ${
+                            countdown > 0
+                              ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                              : 'bg-blue-600 hover:bg-blue-700 text-white'
+                          }`}
+                        >
+                          {isSendingCode ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              Sending...
+                            </>
+                          ) : countdown > 0 ? (
+                            <>
+                              <FiClock />
+                              {formatTime(countdown)}
+                            </>
+                          ) : (
+                            <>
+                              <FiMail />
+                              Verify Email
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                    
+                    {!verificationStatus.isVerified && (
+                      <div className="mt-3 text-sm text-gray-400">
+                        {verificationStatus.isPending && (
+                          <p className="flex items-center gap-2 mb-2">
+                            <FiAlertCircle />
+                            Verification code sent. Check your email.
+                          </p>
+                        )}
+                        <p>Attempts remaining: <span className="font-bold text-white">{verificationStatus.attemptsLeft}/4</span></p>
+                        <p className="text-xs mt-1">After 4 failed attempts, 24-hour cooldown</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div>
                   <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">Basic Information</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -515,7 +736,6 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {/* Address Section */}
                 <div>
                   <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">Address Information</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -575,7 +795,6 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {/* Additional Information */}
                 <div>
                   <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">Additional Information</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -637,7 +856,6 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {/* Social Links (Only in edit mode) */}
                 {isEditing && (
                   <div>
                     <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">Social Links</h4>
@@ -661,7 +879,6 @@ const Profile = () => {
                   </div>
                 )}
 
-                {/* Notification Settings (Only in edit mode) */}
                 {isEditing && (
                   <div>
                     <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">Notification Preferences</h4>
@@ -689,6 +906,95 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {showVerificationModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gray-800 rounded-2xl p-6 max-w-md w-full"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-white">Verify Your Email</h3>
+              <button
+                onClick={() => {
+                  setShowVerificationModal(false)
+                  setVerificationCode('')
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <p className="text-gray-300">
+                Enter the 6-digit verification code sent to:
+                <br />
+                <span className="font-bold text-white">{profileData?.email}</span>
+              </p>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Verification Code
+                </label>
+                <input
+                  ref={codeInputRef}
+                  type="text"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Enter 6-digit code"
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white text-center text-2xl tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  maxLength={6}
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowVerificationModal(false)
+                    setVerificationCode('')
+                  }}
+                  className="flex-1 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={verifyCode}
+                  disabled={isVerifyingCode || verificationCode.length !== 6}
+                  className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                >
+                  {isVerifyingCode ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      Verifying...
+                    </>
+                  ) : (
+                    'Verify Code'
+                  )}
+                </button>
+              </div>
+              
+              <div className="text-center">
+                <button
+                  onClick={sendVerificationCode}
+                  disabled={isSendingCode || countdown > 0}
+                  className="text-blue-400 hover:text-blue-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSendingCode ? 'Sending...' : 'Resend Code'}
+                </button>
+              </div>
+              
+              {verificationStatus.attemptsLeft < 4 && (
+                <div className="text-center text-sm text-yellow-400">
+                  <FiAlertCircle className="inline-block mr-1" />
+                  {verificationStatus.attemptsLeft} attempts remaining
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }
