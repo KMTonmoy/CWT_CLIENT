@@ -1,20 +1,64 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { AuthContext } from '@/AuthProvider/AuthProvider';
+import Link from 'next/link';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => {
+  const { signIn, signInWithGoogle, user } = useContext(AuthContext);
+
+  // Redirect if user is already logged in
+  React.useEffect(() => {
+    if (user) {
       router.push('/dashboard');
-    }, 1500);
+    }
+  }, [user, router]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    try {
+      // Validate inputs
+      if (!email || !password) {
+        throw new Error('Please fill in all fields');
+      }
+
+      // Use the signIn function from AuthContext
+      const result = await signIn(email, password);
+      
+      if (result.success) {
+        // Success - navigation is handled in AuthProvider
+        console.log('Login successful');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError(error.message || 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setIsLoading(true);
+    
+    try {
+      await signInWithGoogle();
+      // Navigation is handled in AuthProvider
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      setError(error.message || 'Google sign-in failed. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -70,6 +114,24 @@ const LoginPage = () => {
             <p className="text-[#E5E7EB]/80 text-sm">Sign in to your CodeWithTonmoy account</p>
           </motion.div>
 
+          {/* Error Message */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg"
+            >
+              <p className="text-red-400 text-sm font-medium flex items-center">
+                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                {error}
+              </p>
+            </motion.div>
+          )}
+
+     
+
           {/* Form with enhanced input fields */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <motion.div
@@ -84,10 +146,14 @@ const LoginPage = () => {
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-[#0B1221] border border-[#1E3A8A]/50 rounded-lg text-[#E5E7EB] placeholder-[#E5E7EB]/40 focus:outline-none focus:ring-2 focus:ring-[#07A8ED]/50 focus:border-[#07A8ED]/30 transition-all"
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError('');
+                }}
+                className="w-full px-4 py-3 bg-[#0B1221] border border-[#1E3A8A]/50 rounded-lg text-[#E5E7EB] placeholder-[#E5E7EB]/40 focus:outline-none focus:ring-2 focus:ring-[#07A8ED]/50 focus:border-[#07A8ED]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="Enter your email"
                 required
+                disabled={isLoading}
               />
             </motion.div>
 
@@ -103,12 +169,39 @@ const LoginPage = () => {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-[#0B1221] border border-[#1E3A8A]/50 rounded-lg text-[#E5E7EB] placeholder-[#E5E7EB]/40 focus:outline-none focus:ring-2 focus:ring-[#07A8ED]/50 focus:border-[#07A8ED]/30 transition-all"
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError('');
+                }}
+                className="w-full px-4 py-3 bg-[#0B1221] border border-[#1E3A8A]/50 rounded-lg text-[#E5E7EB] placeholder-[#E5E7EB]/40 focus:outline-none focus:ring-2 focus:ring-[#07A8ED]/50 focus:border-[#07A8ED]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="Enter your password"
                 required
+                disabled={isLoading}
               />
             </motion.div>
+
+            {/* Remember me and Forgot password */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-[#1E3A8A]/50 bg-[#0B1221] text-[#07A8ED] focus:ring-[#07A8ED]/50"
+                  disabled={isLoading}
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-[#E5E7EB]/80">
+                  Remember me
+                </label>
+              </div>
+              <Link
+                href="/forgot-password"
+                className="text-sm text-[#07A8ED] hover:text-[#3B82F6] transition-colors disabled:opacity-50"
+                onClick={(e) => isLoading && e.preventDefault()}
+              >
+                Forgot password?
+              </Link>
+            </div>
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -145,15 +238,17 @@ const LoginPage = () => {
             className="mt-6 text-center text-sm text-[#E5E7EB]/80"
           >
             <p className="mb-1">
-              Don't have an account?{' '}
-              <a href="/register" className="text-[#07A8ED] hover:underline font-medium transition-colors">
+              Dont have an account?{' '}
+              <Link 
+                href="/register" 
+                className="text-[#07A8ED] hover:underline font-medium transition-colors"
+                onClick={(e) => isLoading && e.preventDefault()}
+              >
                 Register
-              </a>
+              </Link>
             </p>
-            <p>
-              <a href="/forgot-password" className="text-[#07A8ED] hover:underline transition-colors">
-                Forgot password?
-              </a>
+            <p className="text-xs text-[#E5E7EB]/60 mt-4">
+              By signing in, you agree to our Terms of Service and Privacy Policy
             </p>
           </motion.div>
         </div>

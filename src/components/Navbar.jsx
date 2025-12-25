@@ -1,64 +1,91 @@
-'use client'
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+"use client";
+import React, { useState, useEffect, useContext } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import { AuthContext } from "@/AuthProvider/AuthProvider";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logOut } = useContext(AuthContext);
 
-  // Close menu when clicking outside on mobile
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (isMenuOpen && !event.target.closest('.mobile-menu') && !event.target.closest('.menu-button')) {
+      if (
+        isMenuOpen &&
+        !event.target.closest(".mobile-menu") &&
+        !event.target.closest(".menu-button")
+      ) {
         setIsMenuOpen(false);
+      }
+      if (
+        isUserMenuOpen &&
+        !event.target.closest(".user-menu") &&
+        !event.target.closest(".user-menu-button")
+      ) {
+        setIsUserMenuOpen(false);
       }
     };
 
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [isMenuOpen]);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [isMenuOpen, isUserMenuOpen]);
 
-  // Prevent body scroll when menu is open
   useEffect(() => {
     if (isMenuOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [isMenuOpen]);
 
-  // Close menu on route change
   useEffect(() => {
-    setIsMenuOpen(false);
-  }, [pathname]);
+    const closeMenu = () => setIsMenuOpen(false);
+    window.addEventListener("popstate", closeMenu);
+    return () => window.removeEventListener("popstate", closeMenu);
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logOut();
+      setIsUserMenuOpen(false);
+    } catch (error) {
+      console.error("Logout error:", error);
+      alert(error.message || "Failed to logout");
+    }
+  };
 
   const isActive = (path) => {
-    if (path === '/') return pathname === '/';
+    if (path === "/") return pathname === "/";
     return pathname?.startsWith(path);
   };
 
   const navItems = [
-    { name: 'Home', path: '/' },
-    { name: 'Courses', path: '/course' },
-    { name: 'About', path: '/about' },
-    { name: 'Contact', path: '/contact' }
+    { name: "Home", path: "/" },
+    { name: "Courses", path: "/course" },
+    { name: "About", path: "/about" },
+    { name: "Contact", path: "/contact" },
   ];
 
   return (
     <>
-      {/* Main Navbar */}
       <nav className="bg-[#0B1221] text-[#07A8ED] px-6 py-4 shadow-lg border-b border-[#1E3A8A] sticky top-0 z-40">
         <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="text-3xl font-extrabold cursor-pointer select-none">
-            <span className="text-[#07A8ED] hover:text-white transition-colors">CWT</span>
+          <Link
+            href="/"
+            className="text-3xl font-extrabold cursor-pointer select-none"
+          >
+            <span className="text-[#07A8ED] hover:text-white transition-colors">
+              CWT
+            </span>
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
             <ul className="flex space-x-6 font-semibold text-lg">
               {navItems.map((item) => (
@@ -67,9 +94,10 @@ const Navbar = () => {
                     href={item.path}
                     className={`
                       px-4 py-2 rounded-lg transition-all duration-200
-                      ${isActive(item.path)
-                        ? 'text-white bg-[#1E3A8A]'
-                        : 'text-[#E5E7EB] hover:text-white hover:bg-[#1E3A8A]/50'
+                      ${
+                        isActive(item.path)
+                          ? "text-white bg-[#1E3A8A]"
+                          : "text-[#E5E7EB] hover:text-white hover:bg-[#1E3A8A]/50"
                       }
                     `}
                   >
@@ -79,28 +107,118 @@ const Navbar = () => {
               ))}
             </ul>
 
-            <Link
-              href="/login"
-              className="border border-[#07A8ED] text-[#07A8ED] px-6 py-2 rounded-lg font-bold hover:bg-[#07A8ED] hover:text-[#0B1221] transition-all duration-300"
-            >
-              Login
-            </Link>
+            {user ? (
+              <div className="relative user-menu">
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="user-menu-button flex items-center space-x-2 border border-[#07A8ED] text-[#07A8ED] px-6 py-2 rounded-lg font-bold hover:bg-[#07A8ED] hover:text-[#0B1221] transition-all duration-300"
+                >
+                  {user.photoURL ? (
+                    <Image
+                      src={user.photoURL}
+                      alt={user.displayName || "User"}
+                      width={32}
+                      height={32}
+                      className="rounded-full"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-[#07A8ED] flex items-center justify-center text-[#0B1221] font-bold">
+                      {user.displayName?.[0] || user.email?.[0] || "U"}
+                    </div>
+                  )}
+                  <span>{user.displayName || "Account"}</span>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${
+                      isUserMenuOpen ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-[#0B1221] border border-[#1E3A8A] rounded-lg shadow-xl z-50">
+                    <div className="py-2">
+                      <div className="px-4 py-3 border-b border-[#1E3A8A]">
+                        <p className="text-sm font-medium text-white">
+                          {user.displayName || "User"}
+                        </p>
+                        <p className="text-xs text-gray-400 truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                      <Link
+                        href="/dashboard"
+                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-[#1E3A8A] hover:text-white transition-colors"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/profile"
+                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-[#1E3A8A] hover:text-white transition-colors"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        Profile
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-colors"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="border border-[#07A8ED] text-[#07A8ED] px-6 py-2 rounded-lg font-bold hover:bg-[#07A8ED] hover:text-[#0B1221] transition-all duration-300"
+              >
+                Login
+              </Link>
+            )}
           </div>
 
-          {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-4">
-            <Link
-              href="/login"
-              className="border border-[#07A8ED] text-[#07A8ED] px-4 py-1 rounded-lg font-bold hover:bg-[#07A8ED] hover:text-[#0B1221] transition-all duration-300 text-sm"
-            >
-              Login
-            </Link>
+            {user ? (
+              <div className="flex items-center space-x-3">
+                <Link
+                  href="/dashboard"
+                  className="text-sm text-[#07A8ED] hover:text-white"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="border border-red-500 text-red-500 px-3 py-1 rounded-lg text-sm hover:bg-red-500 hover:text-white transition-all"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="border border-[#07A8ED] text-[#07A8ED] px-4 py-1 rounded-lg font-bold hover:bg-[#07A8ED] hover:text-[#0B1221] transition-all duration-300 text-sm"
+              >
+                Login
+              </Link>
+            )}
 
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="menu-button text-[#07A8ED] hover:text-white transition p-2 rounded-lg hover:bg-[#1E3A8A]/30"
               type="button"
-              aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             >
               {isMenuOpen ? (
                 <svg
@@ -111,7 +229,11 @@ const Navbar = () => {
                   stroke="currentColor"
                   strokeWidth={2}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               ) : (
                 <svg
@@ -122,7 +244,11 @@ const Navbar = () => {
                   stroke="currentColor"
                   strokeWidth={2}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M4 16h16" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4 8h16M4 16h16"
+                  />
                 </svg>
               )}
             </button>
@@ -130,21 +256,18 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile Side Menu Overlay */}
       <div
         className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 md:hidden ${
-          isMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+          isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
         }`}
         onClick={() => setIsMenuOpen(false)}
       />
 
-      {/* Mobile Side Menu */}
       <div
         className={`mobile-menu fixed top-0 left-0 h-full w-64 bg-[#0B1221] shadow-2xl z-50 transform transition-transform duration-300 ease-out md:hidden ${
-          isMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          isMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* Menu Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#1E3A8A]">
           <h2 className="text-xl font-bold text-[#07A8ED]">Menu</h2>
           <button
@@ -161,13 +284,59 @@ const Navbar = () => {
               stroke="currentColor"
               strokeWidth={2}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
-        {/* Menu Items */}
         <div className="p-4">
+          {user && (
+            <div className="mb-6 p-4 bg-[#1E3A8A]/20 rounded-lg">
+              <div className="flex items-center space-x-3">
+                {user.photoURL ? (
+                  <Image
+                    src={user.photoURL}
+                    alt={user.displayName || "User"}
+                    width={40}
+                    height={40}
+                    className="rounded-full"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-[#07A8ED] flex items-center justify-center text-[#0B1221] font-bold text-lg">
+                    {user.displayName?.[0] || user.email?.[0] || "U"}
+                  </div>
+                )}
+                <div>
+                  <p className="font-medium text-white">
+                    {user.displayName || "User"}
+                  </p>
+                  <p className="text-sm text-gray-400 truncate">
+                    {user.email}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 flex space-x-2">
+                <Link
+                  href="/dashboard"
+                  className="flex-1 text-center py-2 bg-[#07A8ED] text-[#0B1221] rounded-lg font-medium hover:bg-[#07A8ED]/90 transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex-1 text-center py-2 border border-red-500 text-red-500 rounded-lg font-medium hover:bg-red-500 hover:text-white transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          )}
+
           <ul className="space-y-2">
             {navItems.map((item) => (
               <li key={item.name}>
@@ -175,9 +344,10 @@ const Navbar = () => {
                   href={item.path}
                   className={`
                     flex items-center px-4 py-3 rounded-lg transition-all duration-200 text-lg font-medium
-                    ${isActive(item.path)
-                      ? 'text-white bg-gradient-to-r from-[#1E3A8A] to-[#07A8ED]/30'
-                      : 'text-[#E5E7EB] hover:text-white hover:bg-[#1E3A8A]/30'
+                    ${
+                      isActive(item.path)
+                        ? "text-white bg-gradient-to-r from-[#1E3A8A] to-[#07A8ED]/30"
+                        : "text-[#E5E7EB] hover:text-white hover:bg-[#1E3A8A]/30"
                     }
                   `}
                   onClick={() => setIsMenuOpen(false)}
@@ -191,18 +361,18 @@ const Navbar = () => {
             ))}
           </ul>
 
-          {/* Extra Mobile Login Button */}
-          <div className="mt-8 pt-6 border-t border-[#1E3A8A]/50">
-            <Link
-              href="/login"
-              className="block w-full text-center border-2 border-[#07A8ED] text-[#07A8ED] py-3 px-4 rounded-lg font-bold hover:bg-[#07A8ED] hover:text-[#0B1221] transition-all duration-300"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Login
-            </Link>
-          </div>
+          {!user && (
+            <div className="mt-8 pt-6 border-t border-[#1E3A8A]/50">
+              <Link
+                href="/login"
+                className="block w-full text-center border-2 border-[#07A8ED] text-[#07A8ED] py-3 px-4 rounded-lg font-bold hover:bg-[#07A8ED] hover:text-[#0B1221] transition-all duration-300"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Login
+              </Link>
+            </div>
+          )}
 
-          {/* Footer Info */}
           <div className="mt-8 text-center text-sm text-[#E5E7EB]/70">
             <p>Code With Tonmoy</p>
             <p className="mt-1">Learn to Code</p>
