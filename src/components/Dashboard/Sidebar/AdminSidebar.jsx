@@ -22,6 +22,12 @@ import {
   FiGlobe,
   FiChevronDown,
   FiChevronUp,
+  FiLayout,
+  FiImage,
+  FiFilm,
+  FiCode,
+  FiPenTool,
+  FiTarget,
 } from "react-icons/fi";
 import { RiVerifiedBadgeFill } from "react-icons/ri";
 import { useUserData } from "@/hooks/useUserData";
@@ -41,98 +47,88 @@ const AdminSidebar = () => {
     {
       title: "Dashboard",
       icon: <FiHome size={20} />,
-      path: "/admin",
+      path: "/dashboard",
       color: "text-blue-400",
     },
+    
     {
-      title: "Users",
-      icon: <FiUsers size={20} />,
-      path: "/admin/users",
-      color: "text-green-400",
+      title: "Website",
+      icon: <FiLayout size={20} />,
+      path: "/dashboard/website",
+      color: "text-purple-400",
       submenu: [
-        { title: "All Users", path: "/admin/users" },
-        { title: "Add User", path: "/admin/users/add" },
-        { title: "Roles", path: "/admin/users/roles" },
+        { title: "Hero", path: "/dashboard/hero" },
+        { title: "What You Learn", path: "/dashboard/what-you-learn" },
+        { title: "Curriculum", path: "/dashboard/curriculum" },
+        { title: "Pricing", path: "/dashboard/pricing" },
+        { title: "Certificate", path: "/dashboard/certificate" },
+        { title: "Community", path: "/dashboard/community" },
+        { title: "Contact", path: "/dashboard/contact" },
+        { title: "Solve", path: "/dashboard/solve" },
+        { title: "Projects", path: "/dashboard/projects" },
+        { title: "About", path: "/dashboard/about" },
       ],
-      key: "users",
+      key: "website",
     },
     {
       title: "Courses",
       icon: <FiBook size={20} />,
-      path: "/admin/courses",
-      color: "text-purple-400",
+      path: "/dashboard/courses",
+      color: "text-yellow-400",
       submenu: [
-        { title: "All Courses", path: "/admin/courses" },
-        { title: "Add Course", path: "/admin/courses/add" },
-        { title: "Categories", path: "/admin/courses/categories" },
+        { title: "All Courses", path: "/dashboard/courses" },
+        { title: "Add Course", path: "/dashboard/courses/add" },
+        { title: "Categories", path: "/dashboard/courses/categories" },
+        { title: "Modules", path: "/dashboard/courses/modules" },
+        { title: "Lessons", path: "/dashboard/courses/lessons" },
       ],
       key: "courses",
     },
     {
-      title: "Analytics",
-      icon: <FiBarChart2 size={20} />,
-      path: "/admin/analytics",
-      color: "text-yellow-400",
-    },
-    {
-      title: "Payments",
-      icon: <FiDollarSign size={20} />,
-      path: "/admin/payments",
-      color: "text-green-400",
-      submenu: [
-        { title: "Transactions", path: "/admin/payments" },
-        { title: "Invoices", path: "/admin/payments/invoices" },
-        { title: "Refunds", path: "/admin/payments/refunds" },
-      ],
-      key: "payments",
-    },
-    {
-      title: "Content",
-      icon: <FiFileText size={20} />,
-      path: "/admin/content",
+      title: "Blog",
+      icon: <FiPenTool size={20} />,
+      path: "/dashboard/blog",
       color: "text-pink-400",
       submenu: [
-        { title: "Blog Posts", path: "/admin/content/blog" },
-        { title: "Pages", path: "/admin/content/pages" },
-        { title: "Media", path: "/admin/content/media" },
+        { title: "Posts", path: "/dashboard/blog" },
+        { title: "Create", path: "/dashboard/blog/create" },
+        { title: "Categories", path: "/dashboard/blog/categories" },
+        { title: "Tags", path: "/dashboard/blog/tags" },
       ],
-      key: "content",
+      key: "blog",
     },
+ 
     {
-      title: "Messages",
-      icon: <FiMessageSquare size={20} />,
-      path: "/admin/messages",
-      color: "text-cyan-400",
-      badge: "5",
-    },
-    {
-      title: "Settings",
-      icon: <FiSettings size={20} />,
-      path: "/admin/settings",
-      color: "text-gray-400",
+      title: "Projects",
+      icon: <FiCode size={20} />,
+      path: "/dashboard/projects",
+      color: "text-orange-400",
       submenu: [
-        { title: "General", path: "/admin/settings/general" },
-        { title: "Security", path: "/admin/settings/security" },
-        { title: "Notifications", path: "/admin/settings/notifications" },
+        { title: "All", path: "/dashboard/projects" },
+        { title: "Add", path: "/dashboard/projects/add" },
+        { title: "Technologies", path: "/dashboard/projects/tech" },
+        { title: "Showcase", path: "/dashboard/projects/showcase" },
       ],
-      key: "settings",
+      key: "projects",
     },
     {
-      title: "System",
-      icon: <FiDatabase size={20} />,
-      path: "/admin/system",
-      color: "text-red-400",
+      title: "Analytics",
+      icon: <FiBarChart2 size={20} />,
+      path: "/dashboard/analytics",
+      color: "text-teal-400",
       submenu: [
-        { title: "Database", path: "/admin/system/database" },
-        { title: "Logs", path: "/admin/system/logs" },
-        { title: "Backup", path: "/admin/system/backup" },
+        { title: "Overview", path: "/dashboard/analytics" },
+        { title: "Users", path: "/dashboard/analytics/users" },
+        { title: "Courses", path: "/dashboard/analytics/courses" },
+        { title: "Revenue", path: "/dashboard/analytics/revenue" },
       ],
-      key: "system",
+      key: "analytics",
     },
+ 
   ];
 
   const isActive = useCallback((path) => {
-    if (path === "/admin") return pathname === "/admin";
+    if (path === "/dashboard") return pathname === "/dashboard";
     return pathname?.startsWith(path);
   }, [pathname]);
 
@@ -147,25 +143,30 @@ const AdminSidebar = () => {
     router.push("/login");
   };
 
+  // Initialize open submenus on mount and when pathname changes
   useLayoutEffect(() => {
-    const initialOpenState = {};
-    let hasChanges = false;
-    
+    const newOpenState = {};
     menuItems.forEach((item) => {
-      if (item.submenu && item.key) {
-        const shouldBeOpen = isActive(item.path);
-        if (shouldBeOpen) {
-          initialOpenState[item.key] = true;
-          hasChanges = true;
-        }
+      if (item.submenu && item.key && isActive(item.path)) {
+        newOpenState[item.key] = true;
       }
     });
+    
+    // Only update if state changed
+    setOpenSubmenus((prev) => {
+      const prevKeys = Object.keys(prev);
+      const newKeys = Object.keys(newOpenState);
+      
+      if (prevKeys.length !== newKeys.length) return newOpenState;
+      
+      const hasChanged = prevKeys.some(key => prev[key] !== newOpenState[key]) ||
+                        newKeys.some(key => prev[key] !== newOpenState[key]);
+      
+      return hasChanged ? newOpenState : prev;
+    });
+  }, [pathname]);
 
-    if (hasChanges) {
-      setOpenSubmenus(initialOpenState);
-    }
-  }, [isActive]);
-
+  // Handle resizing
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!isResizing) return;
@@ -174,7 +175,14 @@ const AdminSidebar = () => {
       const newWidth = Math.max(80, Math.min(500, e.clientX));
       
       setSidebarWidth(newWidth);
-      setCollapsed(newWidth <= 200);
+      
+      // Close submenus when collapsing
+      if (newWidth <= 200 && !collapsed) {
+        setOpenSubmenus({});
+        setCollapsed(true);
+      } else if (newWidth > 200 && collapsed) {
+        setCollapsed(false);
+      }
     };
 
     const handleMouseUp = () => {
@@ -193,32 +201,22 @@ const AdminSidebar = () => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isResizing]);
+  }, [isResizing, collapsed]);
 
-  useEffect(() => {
-    if (collapsed) {
+  // Handle sidebar collapse/expand
+  const handleToggleCollapse = () => {
+    const newCollapsed = !collapsed;
+    setCollapsed(newCollapsed);
+    
+    // Close all submenus when collapsing
+    if (!newCollapsed) {
       setOpenSubmenus({});
     }
-  }, [collapsed]);
+  };
 
   const isSubmenuOpen = (item) => {
     if (!item.submenu || !item.key) return false;
     return openSubmenus[item.key] || isActive(item.path);
-  };
-
-  const sidebarVariants = {
-    expanded: { width: sidebarWidth },
-    collapsed: { width: 80 }
-  };
-
-  const contentVariants = {
-    hidden: { opacity: 0, x: -10 },
-    visible: { opacity: 1, x: 0 }
-  };
-
-  const submenuVariants = {
-    hidden: { opacity: 0, height: 0 },
-    visible: { opacity: 1, height: "auto" }
   };
 
   return (
@@ -227,8 +225,7 @@ const AdminSidebar = () => {
         ref={sidebarRef}
         className="h-screen flex flex-col bg-gradient-to-b from-gray-900 to-gray-950 border-r border-gray-800 fixed left-0 top-0 z-50 overflow-hidden"
         style={{ width: collapsed ? 80 : sidebarWidth }}
-        animate={collapsed ? "collapsed" : "expanded"}
-        variants={sidebarVariants}
+        animate={{ width: collapsed ? 80 : sidebarWidth }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         <div
@@ -246,17 +243,16 @@ const AdminSidebar = () => {
             {!collapsed && (
               <motion.div 
                 className="flex items-center space-x-3 min-w-0"
-                variants={contentVariants}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.2 }}
               >
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold text-lg">A</span>
+                  <span className="text-white font-bold text-lg">CWT</span>
                 </div>
                 <div className="min-w-0">
                   <h2 className="text-white font-bold text-lg truncate">Admin Panel</h2>
-                  <p className="text-xs text-gray-400 truncate">CWT Management</p>
+                  <p className="text-xs text-gray-400 truncate">Dashboard</p>
                 </div>
               </motion.div>
             )}
@@ -271,10 +267,7 @@ const AdminSidebar = () => {
               </motion.div>
             )}
             <motion.button
-              onClick={() => {
-                setCollapsed(!collapsed);
-                if (!collapsed) setOpenSubmenus({});
-              }}
+              onClick={handleToggleCollapse}
               className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors flex-shrink-0"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
@@ -314,8 +307,8 @@ const AdminSidebar = () => {
                 <h3 className="text-white font-medium truncate">
                   {userData.name || "Admin"}
                 </h3>
-                <p className="text-xs text-gray-400 truncate">
-                  {userData.role === "admin" ? "Super Admin" : "Administrator"}
+                <p className="text-xs text-gray-400 truncate capitalize">
+                  {userData.role || "admin"}
                 </p>
               </div>
             </div>
@@ -425,10 +418,9 @@ const AdminSidebar = () => {
                   <AnimatePresence>
                     {!collapsed && hasSubmenu && isSubmenuItemOpen && (
                       <motion.div
-                        initial="hidden"
-                        animate="visible"
-                        exit="hidden"
-                        variants={submenuVariants}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                       >
@@ -476,22 +468,26 @@ const AdminSidebar = () => {
               Quick Actions
             </h4>
             <div className="grid grid-cols-2 gap-2">
-              <motion.button 
-                className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors text-xs truncate"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <FiBell className="inline mr-1" size={12} />
-                Alerts
-              </motion.button>
-              <motion.button 
-                className="p-2 bg-green-500/10 text-green-400 rounded-lg hover:bg-green-500/20 transition-colors text-xs truncate"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <FiGlobe className="inline mr-1" size={12} />
-                Live
-              </motion.button>
+              <Link href="/dashboard/what-you-learn">
+                <motion.button 
+                  className="w-full p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors text-xs truncate"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <FiTarget className="inline mr-1" size={12} />
+                  Edit Sections
+                </motion.button>
+              </Link>
+              <Link href="/dashboard/media/upload">
+                <motion.button 
+                  className="w-full p-2 bg-green-500/10 text-green-400 rounded-lg hover:bg-green-500/20 transition-colors text-xs truncate"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <FiImage className="inline mr-1" size={12} />
+                  Upload Media
+                </motion.button>
+              </Link>
             </div>
           </motion.div>
         )}
