@@ -1,361 +1,396 @@
-'use client'
-import React, { useState, useEffect, useContext, useRef } from 'react'
-import { motion } from 'framer-motion'
-import { AuthContext } from '@/AuthProvider/AuthProvider'
-import axios from 'axios'
-import { 
-  FiCamera, FiUpload, FiSave, FiEdit, FiX, 
-  FiMail, FiCheck, FiClock, FiAlertCircle 
-} from 'react-icons/fi'
-
-const Profile = () => {
-  const { user } = useContext(AuthContext)
-  const [profileData, setProfileData] = useState(null)
-  const [isEditing, setIsEditing] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [uploadingPhoto, setUploadingPhoto] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [message, setMessage] = useState({ type: '', text: '' })
+"use client";
+import React, { useState, useEffect, useContext, useRef } from "react";
+import { motion } from "framer-motion";
+import { AuthContext } from "@/AuthProvider/AuthProvider";
+import axios from "axios";
+import {
+  FiCamera,
+  FiUpload,
+  FiSave,
+  FiEdit,
+  FiX,
+  FiMail,
+  FiCheck,
+  FiClock,
+  FiAlertCircle,
+} from "react-icons/fi";
   
-  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false)
-  const [verificationCode, setVerificationCode] = useState('')
+ 
+const Profile = () => {
+   
+  const { user } = useContext(AuthContext);
+  const [profileData, setProfileData] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [message, setMessage] = useState({ type: "", text: "" });
+
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
   const [verificationStatus, setVerificationStatus] = useState({
     isVerified: false,
     isPending: false,
     attemptsLeft: 4,
-    cooldownUntil: null
-  })
-  const [showVerificationModal, setShowVerificationModal] = useState(false)
-  const [isSendingCode, setIsSendingCode] = useState(false)
-  const [isVerifyingCode, setIsVerifyingCode] = useState(false)
-  const [countdown, setCountdown] = useState(0)
-  
-  const fileInputRef = useRef(null)
-  const codeInputRef = useRef(null)
+    cooldownUntil: null,
+  });
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false);
+  const [countdown, setCountdown] = useState(0);
 
-  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-  const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
-  const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+  const fileInputRef = useRef(null);
+  const codeInputRef = useRef(null);
+
+  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const CLOUDINARY_UPLOAD_PRESET =
+    process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
   useEffect(() => {
     if (user) {
-      fetchProfileData()
-      checkVerificationStatus()
+      fetchProfileData();
+      checkVerificationStatus();
     }
-  }, [user])
+  }, [user]);
 
   useEffect(() => {
-    let timer
+    let timer;
     if (countdown > 0) {
-      timer = setTimeout(() => setCountdown(countdown - 1), 1000)
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
     }
-    return () => clearTimeout(timer)
-  }, [countdown])
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
   const fetchProfileData = async () => {
     try {
-      setLoading(true)
-      const response = await axios.get(`${BASE_URL}/api/users/uid/${user.uid}`)
+      setLoading(true);
+      const response = await axios.get(`${BASE_URL}/api/users/uid/${user.uid}`);
       if (response.data.success) {
-        setProfileData(response.data.user)
+        setProfileData(response.data.user);
       }
     } catch (error) {
-      console.error('Error fetching profile:', error)
-      setMessage({ type: 'error', text: 'Failed to load profile data' })
+      console.error("Error fetching profile:", error);
+      setMessage({ type: "error", text: "Failed to load profile data" });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const checkVerificationStatus = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/email/verification-status/${user.uid}`)
+      const response = await axios.get(
+        `${BASE_URL}/api/email/verification-status/${user.uid}`
+      );
       if (response.data.success) {
         setVerificationStatus({
           isVerified: response.data.isVerified,
           isPending: response.data.isPending,
           attemptsLeft: response.data.attemptsLeft,
-          cooldownUntil: response.data.cooldownUntil
-        })
-        
+          cooldownUntil: response.data.cooldownUntil,
+        });
+
         if (response.data.cooldownUntil) {
-          const cooldownMs = new Date(response.data.cooldownUntil) - new Date()
+          const cooldownMs = new Date(response.data.cooldownUntil) - new Date();
           if (cooldownMs > 0) {
-            setCountdown(Math.ceil(cooldownMs / 1000))
+            setCountdown(Math.ceil(cooldownMs / 1000));
           }
         }
       }
     } catch (error) {
-      console.error('Error checking verification status:', error)
+      console.error("Error checking verification status:", error);
     }
-  }
+  };
 
   const sendVerificationCode = async () => {
     try {
-      setIsSendingCode(true)
-      setMessage({ type: '', text: '' })
+      setIsSendingCode(true);
+      setMessage({ type: "", text: "" });
 
-      const response = await axios.post(`${BASE_URL}/api/email/send-verification`, {
-        email: profileData.email,
-        userId: user.uid,
-        userName: profileData.name
-      })
+      const response = await axios.post(
+        `${BASE_URL}/api/email/send-verification`,
+        {
+          email: profileData.email,
+          userId: user.uid,
+          userName: profileData.name,
+        }
+      );
 
       if (response.data.success) {
-        setMessage({ 
-          type: 'success', 
-          text: `Verification code sent to ${profileData.email}` 
-        })
-        setShowVerificationModal(true)
-        setVerificationStatus(prev => ({
+        setMessage({
+          type: "success",
+          text: `Verification code sent to ${profileData.email}`,
+        });
+        setShowVerificationModal(true);
+        setVerificationStatus((prev) => ({
           ...prev,
           isPending: true,
-          attemptsLeft: 4
-        }))
-        
+          attemptsLeft: 4,
+        }));
+
         setTimeout(() => {
           if (codeInputRef.current) {
-            codeInputRef.current.focus()
+            codeInputRef.current.focus();
           }
-        }, 100)
+        }, 100);
       }
     } catch (error) {
-      console.error('Error sending verification code:', error)
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.message || 'Failed to send verification code' 
-      })
-      
+      console.error("Error sending verification code:", error);
+      setMessage({
+        type: "error",
+        text:
+          error.response?.data?.message || "Failed to send verification code",
+      });
+
       if (error.response?.data?.cooldownUntil) {
-        const cooldownMs = new Date(error.response.data.cooldownUntil) - new Date()
+        const cooldownMs =
+          new Date(error.response.data.cooldownUntil) - new Date();
         if (cooldownMs > 0) {
-          setCountdown(Math.ceil(cooldownMs / 1000))
-          setVerificationStatus(prev => ({
+          setCountdown(Math.ceil(cooldownMs / 1000));
+          setVerificationStatus((prev) => ({
             ...prev,
-            cooldownUntil: error.response.data.cooldownUntil
-          }))
+            cooldownUntil: error.response.data.cooldownUntil,
+          }));
         }
       }
     } finally {
-      setIsSendingCode(false)
+      setIsSendingCode(false);
     }
-  }
+  };
 
   const verifyCode = async () => {
     if (verificationCode.length !== 6) {
-      setMessage({ type: 'error', text: 'Please enter a 6-digit code' })
-      return
+      setMessage({ type: "error", text: "Please enter a 6-digit code" });
+      return;
     }
 
     try {
-      setIsVerifyingCode(true)
-      setMessage({ type: '', text: '' })
+      setIsVerifyingCode(true);
+      setMessage({ type: "", text: "" });
 
       const response = await axios.post(`${BASE_URL}/api/email/verify-code`, {
         email: profileData.email,
         code: verificationCode,
-        userId: user.uid
-      })
+        userId: user.uid,
+      });
 
       if (response.data.success) {
-        setMessage({ 
-          type: 'success', 
-          text: 'Email verified successfully!' 
-        })
+        setMessage({
+          type: "success",
+          text: "Email verified successfully!",
+        });
         setVerificationStatus({
           isVerified: true,
           isPending: false,
           attemptsLeft: 4,
-          cooldownUntil: null
-        })
-        setShowVerificationModal(false)
-        setVerificationCode('')
-        
-        setProfileData(prev => ({
+          cooldownUntil: null,
+        });
+        setShowVerificationModal(false);
+        setVerificationCode("");
+
+        setProfileData((prev) => ({
           ...prev,
-          emailVerified: true
-        }))
+          emailVerified: true,
+        }));
       }
     } catch (error) {
-      console.error('Error verifying code:', error)
-      const errorMessage = error.response?.data?.message || 'Invalid verification code'
-      setMessage({ type: 'error', text: errorMessage })
-      
+      console.error("Error verifying code:", error);
+      const errorMessage =
+        error.response?.data?.message || "Invalid verification code";
+      setMessage({ type: "error", text: errorMessage });
+
       if (error.response?.data?.attemptsLeft !== undefined) {
-        setVerificationStatus(prev => ({
+        setVerificationStatus((prev) => ({
           ...prev,
-          attemptsLeft: error.response.data.attemptsLeft
-        }))
+          attemptsLeft: error.response.data.attemptsLeft,
+        }));
       }
-      
+
       if (error.response?.data?.cooldownUntil) {
-        const cooldownMs = new Date(error.response.data.cooldownUntil) - new Date()
+        const cooldownMs =
+          new Date(error.response.data.cooldownUntil) - new Date();
         if (cooldownMs > 0) {
-          setCountdown(Math.ceil(cooldownMs / 1000))
-          setVerificationStatus(prev => ({
+          setCountdown(Math.ceil(cooldownMs / 1000));
+          setVerificationStatus((prev) => ({
             ...prev,
-            cooldownUntil: error.response.data.cooldownUntil
-          }))
-          setShowVerificationModal(false)
+            cooldownUntil: error.response.data.cooldownUntil,
+          }));
+          setShowVerificationModal(false);
         }
       }
-      
-      setVerificationCode('')
+
+      setVerificationCode("");
       if (codeInputRef.current) {
-        codeInputRef.current.focus()
+        codeInputRef.current.focus();
       }
     } finally {
-      setIsVerifyingCode(false)
+      setIsVerifyingCode(false);
     }
-  }
+  };
 
   const formatTime = (seconds) => {
-    const hours = Math.floor(seconds / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    const secs = seconds % 60
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   const handlePhotoUpload = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
+    const file = e.target.files[0];
+    if (!file) return;
 
     if (file.size > 10 * 1024 * 1024) {
-      setMessage({ type: 'error', text: 'File size should be less than 10MB' })
-      return
+      setMessage({ type: "error", text: "File size should be less than 10MB" });
+      return;
     }
 
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    const validTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
     if (!validTypes.includes(file.type)) {
-      setMessage({ type: 'error', text: 'Only image files (JPG, PNG, GIF, WebP) are allowed' })
-      return
+      setMessage({
+        type: "error",
+        text: "Only image files (JPG, PNG, GIF, WebP) are allowed",
+      });
+      return;
     }
 
     try {
-      setUploadingPhoto(true)
-      setUploadProgress(0)
+      setUploadingPhoto(true);
+      setUploadProgress(0);
 
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
-      formData.append('cloud_name', CLOUDINARY_CLOUD_NAME)
-      formData.append('folder', 'cwt-profiles')
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+      formData.append("cloud_name", CLOUDINARY_CLOUD_NAME);
+      formData.append("folder", "cwt-profiles");
 
       const response = await axios.post(
         `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data'
+            "Content-Type": "multipart/form-data",
           },
           onUploadProgress: (progressEvent) => {
-            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-            setUploadProgress(progress)
-          }
+            const progress = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            setUploadProgress(progress);
+          },
         }
-      )
+      );
 
       if (response.data.secure_url) {
         const updateResponse = await axios.patch(
           `${BASE_URL}/api/users/uid/${user.uid}`,
           { photoURL: response.data.secure_url }
-        )
+        );
 
         if (updateResponse.data.success) {
-          setProfileData(prev => ({
+          setProfileData((prev) => ({
             ...prev,
-            photoURL: response.data.secure_url
-          }))
-          setMessage({ type: 'success', text: 'Profile photo updated successfully!' })
+            photoURL: response.data.secure_url,
+          }));
+          setMessage({
+            type: "success",
+            text: "Profile photo updated successfully!",
+          });
         }
       }
     } catch (error) {
-      console.error('Error uploading photo:', error)
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.message || 'Failed to upload photo' 
-      })
+      console.error("Error uploading photo:", error);
+      setMessage({
+        type: "error",
+        text: error.response?.data?.message || "Failed to upload photo",
+      });
     } finally {
-      setUploadingPhoto(false)
-      setUploadProgress(0)
+      setUploadingPhoto(false);
+      setUploadProgress(0);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ''
+        fileInputRef.current.value = "";
       }
     }
-  }
+  };
 
   const triggerFileInput = () => {
     if (fileInputRef.current) {
-      fileInputRef.current.click()
+      fileInputRef.current.click();
     }
-  }
+  };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target
-    
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.')
-      setProfileData(prev => ({
+    const { name, value, type, checked } = e.target;
+
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
+      setProfileData((prev) => ({
         ...prev,
         [parent]: {
           ...prev[parent],
-          [child]: type === 'checkbox' ? checked : value
-        }
-      }))
+          [child]: type === "checkbox" ? checked : value,
+        },
+      }));
     } else {
-      setProfileData(prev => ({
+      setProfileData((prev) => ({
         ...prev,
-        [name]: type === 'checkbox' ? checked : value
-      }))
+        [name]: type === "checkbox" ? checked : value,
+      }));
     }
-  }
+  };
 
   const handleSave = async () => {
     try {
-      setSaving(true)
-      setMessage({ type: '', text: '' })
+      setSaving(true);
+      setMessage({ type: "", text: "" });
 
       const dataToSend = {
         ...profileData,
-        updatedAt: new Date().toISOString()
-      }
+        updatedAt: new Date().toISOString(),
+      };
 
       const response = await axios.patch(
         `${BASE_URL}/api/users/uid/${user.uid}`,
         dataToSend
-      )
+      );
 
       if (response.data.success) {
-        setMessage({ type: 'success', text: 'Profile updated successfully!' })
-        setIsEditing(false)
-        fetchProfileData()
+        setMessage({ type: "success", text: "Profile updated successfully!" });
+        setIsEditing(false);
+        fetchProfileData();
       }
     } catch (error) {
-      console.error('Error updating profile:', error)
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.message || 'Failed to update profile' 
-      })
+      console.error("Error updating profile:", error);
+      setMessage({
+        type: "error",
+        text: error.response?.data?.message || "Failed to update profile",
+      });
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A'
+    if (!dateString) return "N/A";
     try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+      return new Date(dateString).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     } catch {
-      return 'Invalid date'
+      return "Invalid date";
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -365,7 +400,7 @@ const Profile = () => {
           <p className="text-gray-300">Loading your profile...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!profileData) {
@@ -373,7 +408,7 @@ const Profile = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-300 text-xl mb-4">Profile not found</p>
-          <button 
+          <button
             onClick={fetchProfileData}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
@@ -381,7 +416,7 @@ const Profile = () => {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -394,16 +429,20 @@ const Profile = () => {
         >
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">My Profile</h1>
-              <p className="text-gray-400">Manage your account information and settings</p>
+              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+                My Profile
+              </h1>
+              <p className="text-gray-400">
+                Manage your account information and settings
+              </p>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setIsEditing(!isEditing)}
                 className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors ${
-                  isEditing 
-                    ? 'bg-red-600 hover:bg-red-700 text-white' 
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  isEditing
+                    ? "bg-red-600 hover:bg-red-700 text-white"
+                    : "bg-blue-600 hover:bg-blue-700 text-white"
                 }`}
               >
                 {isEditing ? (
@@ -425,7 +464,7 @@ const Profile = () => {
                   className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                 >
                   <FiSave size={18} />
-                  {saving ? 'Saving...' : 'Save'}
+                  {saving ? "Saving..." : "Save"}
                 </button>
               )}
             </div>
@@ -437,12 +476,16 @@ const Profile = () => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
-              message.type === 'success' 
-                ? 'bg-green-500/20 border border-green-500/30 text-green-400'
-                : 'bg-red-500/20 border border-red-500/30 text-red-400'
+              message.type === "success"
+                ? "bg-green-500/20 border border-green-500/30 text-green-400"
+                : "bg-red-500/20 border border-red-500/30 text-red-400"
             }`}
           >
-            <div className={`w-2 h-2 rounded-full ${message.type === 'success' ? 'bg-green-400' : 'bg-red-400'}`}></div>
+            <div
+              className={`w-2 h-2 rounded-full ${
+                message.type === "success" ? "bg-green-400" : "bg-red-400"
+              }`}
+            ></div>
             <span>{message.text}</span>
           </motion.div>
         )}
@@ -458,20 +501,20 @@ const Profile = () => {
                 <div className="relative group mb-6">
                   <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-blue-500/30 shadow-lg">
                     {profileData.photoURL ? (
-                      <img 
-                        src={profileData.photoURL} 
+                      <img
+                        src={profileData.photoURL}
                         alt={profileData.name}
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                         <span className="text-6xl font-bold text-white">
-                          {profileData.name?.charAt(0)?.toUpperCase() || 'U'}
+                          {profileData.name?.charAt(0)?.toUpperCase() || "U"}
                         </span>
                       </div>
                     )}
                   </div>
-                  
+
                   <button
                     onClick={triggerFileInput}
                     disabled={uploadingPhoto}
@@ -493,7 +536,7 @@ const Profile = () => {
                     className="hidden"
                   />
                 </div>
-                
+
                 {uploadingPhoto && (
                   <div className="w-full mb-4">
                     <div className="flex justify-between text-sm text-gray-400 mb-1">
@@ -501,29 +544,32 @@ const Profile = () => {
                       <span>{uploadProgress}%</span>
                     </div>
                     <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
                       ></div>
                     </div>
                   </div>
                 )}
-                
+
                 <h2 className="text-2xl font-bold text-white mb-1">
                   {profileData.name}
                 </h2>
                 <p className="text-gray-400 mb-3">{profileData.email}</p>
-                
+
                 <div className="flex flex-wrap gap-2 mb-6">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    profileData.status === 'active' 
-                      ? 'bg-green-500/20 text-green-400'
-                      : 'bg-red-500/20 text-red-400'
-                  }`}>
-                    {profileData.status?.charAt(0)?.toUpperCase() + profileData.status?.slice(1) || 'Active'}
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      profileData.status === "active"
+                        ? "bg-green-500/20 text-green-400"
+                        : "bg-red-500/20 text-red-400"
+                    }`}
+                  >
+                    {profileData.status?.charAt(0)?.toUpperCase() +
+                      profileData.status?.slice(1) || "Active"}
                   </span>
                   <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm font-medium capitalize">
-                    {profileData.role || 'Student'}
+                    {profileData.role || "Student"}
                   </span>
                 </div>
 
@@ -554,7 +600,7 @@ const Profile = () => {
                   className="mt-6 w-full py-3 bg-gray-700/50 border border-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   <FiUpload size={18} />
-                  {uploadingPhoto ? 'Uploading...' : 'Change Profile Photo'}
+                  {uploadingPhoto ? "Uploading..." : "Change Profile Photo"}
                 </button>
               </div>
             </motion.div>
@@ -565,26 +611,32 @@ const Profile = () => {
               transition={{ delay: 0.1 }}
               className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-6"
             >
-              <h3 className="text-lg font-semibold text-white mb-4">Account Status</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">
+                Account Status
+              </h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Email Verified</span>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    profileData.emailVerified 
-                      ? 'bg-green-500/20 text-green-400' 
-                      : 'bg-red-500/20 text-red-400'
-                  }`}>
-                    {profileData.emailVerified ? 'Verified' : 'Not Verified'}
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${
+                      profileData.emailVerified
+                        ? "bg-green-500/20 text-green-400"
+                        : "bg-red-500/20 text-red-400"
+                    }`}
+                  >
+                    {profileData.emailVerified ? "Verified" : "Not Verified"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Phone Verified</span>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    profileData.phoneVerified 
-                      ? 'bg-green-500/20 text-green-400' 
-                      : 'bg-red-500/20 text-red-400'
-                  }`}>
-                    {profileData.phoneVerified ? 'Verified' : 'Not Verified'}
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${
+                      profileData.phoneVerified
+                        ? "bg-green-500/20 text-green-400"
+                        : "bg-red-500/20 text-red-400"
+                    }`}
+                  >
+                    {profileData.phoneVerified ? "Verified" : "Not Verified"}
                   </span>
                 </div>
               </div>
@@ -597,15 +649,25 @@ const Profile = () => {
               animate={{ opacity: 1, x: 0 }}
               className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-6"
             >
-              <h3 className="text-2xl font-bold text-white mb-6">Personal Information</h3>
+              <h3 className="text-2xl font-bold text-white mb-6">
+                Personal Information
+              </h3>
 
               <div className="space-y-8">
                 <div className="mb-6">
-                  <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">Email Verification</h4>
+                  <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">
+                    Email Verification
+                  </h4>
                   <div className="bg-gray-800/30 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-full ${verificationStatus.isVerified ? 'bg-green-500/20' : 'bg-yellow-500/20'}`}>
+                        <div
+                          className={`p-2 rounded-full ${
+                            verificationStatus.isVerified
+                              ? "bg-green-500/20"
+                              : "bg-yellow-500/20"
+                          }`}
+                        >
                           {verificationStatus.isVerified ? (
                             <FiCheck className="text-green-400" size={20} />
                           ) : (
@@ -613,25 +675,33 @@ const Profile = () => {
                           )}
                         </div>
                         <div>
-                          <p className="text-white font-medium">{profileData.email}</p>
-                          <p className={`text-sm ${verificationStatus.isVerified ? 'text-green-400' : 'text-yellow-400'}`}>
-                            {verificationStatus.isVerified 
-                              ? '✓ Email verified' 
+                          <p className="text-white font-medium">
+                            {profileData.email}
+                          </p>
+                          <p
+                            className={`text-sm ${
+                              verificationStatus.isVerified
+                                ? "text-green-400"
+                                : "text-yellow-400"
+                            }`}
+                          >
+                            {verificationStatus.isVerified
+                              ? "✓ Email verified"
                               : verificationStatus.isPending
-                                ? '⏳ Verification pending'
-                                : '⚠️ Email not verified'}
+                              ? "⏳ Verification pending"
+                              : "⚠️ Email not verified"}
                           </p>
                         </div>
                       </div>
-                      
+
                       {!verificationStatus.isVerified && (
                         <button
                           onClick={sendVerificationCode}
                           disabled={isSendingCode || countdown > 0}
                           className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors ${
                             countdown > 0
-                              ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                              : 'bg-blue-600 hover:bg-blue-700 text-white'
+                              ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                              : "bg-blue-600 hover:bg-blue-700 text-white"
                           }`}
                         >
                           {isSendingCode ? (
@@ -653,7 +723,7 @@ const Profile = () => {
                         </button>
                       )}
                     </div>
-                    
+
                     {!verificationStatus.isVerified && (
                       <div className="mt-3 text-sm text-gray-400">
                         {verificationStatus.isPending && (
@@ -662,15 +732,24 @@ const Profile = () => {
                             Verification code sent. Check your email.
                           </p>
                         )}
-                        <p>Attempts remaining: <span className="font-bold text-white">{verificationStatus.attemptsLeft}/4</span></p>
-                        <p className="text-xs mt-1">After 4 failed attempts, 24-hour cooldown</p>
+                        <p>
+                          Attempts remaining:{" "}
+                          <span className="font-bold text-white">
+                            {verificationStatus.attemptsLeft}/4
+                          </span>
+                        </p>
+                        <p className="text-xs mt-1">
+                          After 4 failed attempts, 24-hour cooldown
+                        </p>
                       </div>
                     )}
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">Basic Information</h4>
+                  <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">
+                    Basic Information
+                  </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-400 mb-2">
@@ -680,13 +759,15 @@ const Profile = () => {
                         <input
                           type="text"
                           name="name"
-                          value={profileData.name || ''}
+                          value={profileData.name || ""}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="Enter your full name"
                         />
                       ) : (
-                        <p className="text-white text-lg py-2">{profileData.name || 'Not provided'}</p>
+                        <p className="text-white text-lg py-2">
+                          {profileData.name || "Not provided"}
+                        </p>
                       )}
                     </div>
 
@@ -694,7 +775,9 @@ const Profile = () => {
                       <label className="block text-sm font-medium text-gray-400 mb-2">
                         Email Address
                       </label>
-                      <p className="text-white text-lg py-2">{profileData.email}</p>
+                      <p className="text-white text-lg py-2">
+                        {profileData.email}
+                      </p>
                     </div>
 
                     <div>
@@ -705,13 +788,15 @@ const Profile = () => {
                         <input
                           type="tel"
                           name="phone"
-                          value={profileData.phone || ''}
+                          value={profileData.phone || ""}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="Enter your phone number"
                         />
                       ) : (
-                        <p className="text-white text-lg py-2">{profileData.phone || 'Not provided'}</p>
+                        <p className="text-white text-lg py-2">
+                          {profileData.phone || "Not provided"}
+                        </p>
                       )}
                     </div>
 
@@ -723,13 +808,15 @@ const Profile = () => {
                         <input
                           type="date"
                           name="birthDate"
-                          value={profileData.birthDate?.split('T')[0] || ''}
+                          value={profileData.birthDate?.split("T")[0] || ""}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       ) : (
                         <p className="text-white text-lg py-2">
-                          {profileData.birthDate ? formatDate(profileData.birthDate) : 'Not provided'}
+                          {profileData.birthDate
+                            ? formatDate(profileData.birthDate)
+                            : "Not provided"}
                         </p>
                       )}
                     </div>
@@ -737,7 +824,9 @@ const Profile = () => {
                 </div>
 
                 <div>
-                  <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">Address Information</h4>
+                  <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">
+                    Address Information
+                  </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-400 mb-2">
@@ -746,14 +835,16 @@ const Profile = () => {
                       {isEditing ? (
                         <textarea
                           name="address"
-                          value={profileData.address || ''}
+                          value={profileData.address || ""}
                           onChange={handleInputChange}
                           rows="3"
                           className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                           placeholder="Enter your address"
                         />
                       ) : (
-                        <p className="text-white py-2">{profileData.address || 'Not provided'}</p>
+                        <p className="text-white py-2">
+                          {profileData.address || "Not provided"}
+                        </p>
                       )}
                     </div>
 
@@ -765,13 +856,15 @@ const Profile = () => {
                         <input
                           type="text"
                           name="postCode"
-                          value={profileData.postCode || ''}
+                          value={profileData.postCode || ""}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="Enter postal code"
                         />
                       ) : (
-                        <p className="text-white text-lg py-2">{profileData.postCode || 'Not provided'}</p>
+                        <p className="text-white text-lg py-2">
+                          {profileData.postCode || "Not provided"}
+                        </p>
                       )}
                     </div>
 
@@ -783,20 +876,24 @@ const Profile = () => {
                         <input
                           type="text"
                           name="city"
-                          value={profileData.city || ''}
+                          value={profileData.city || ""}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="Enter your city"
                         />
                       ) : (
-                        <p className="text-white text-lg py-2">{profileData.city || 'Not provided'}</p>
+                        <p className="text-white text-lg py-2">
+                          {profileData.city || "Not provided"}
+                        </p>
                       )}
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">Additional Information</h4>
+                  <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">
+                    Additional Information
+                  </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-400 mb-2">
@@ -805,14 +902,16 @@ const Profile = () => {
                       {isEditing ? (
                         <textarea
                           name="bio"
-                          value={profileData.bio || ''}
+                          value={profileData.bio || ""}
                           onChange={handleInputChange}
                           rows="4"
                           placeholder="Tell us about yourself..."
                           className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                         />
                       ) : (
-                        <p className="text-white py-2">{profileData.bio || 'No bio provided'}</p>
+                        <p className="text-white py-2">
+                          {profileData.bio || "No bio provided"}
+                        </p>
                       )}
                     </div>
 
@@ -825,13 +924,15 @@ const Profile = () => {
                           <input
                             type="text"
                             name="education"
-                            value={profileData.education || ''}
+                            value={profileData.education || ""}
                             onChange={handleInputChange}
                             className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Your education background"
                           />
                         ) : (
-                          <p className="text-white text-lg py-2">{profileData.education || 'Not provided'}</p>
+                          <p className="text-white text-lg py-2">
+                            {profileData.education || "Not provided"}
+                          </p>
                         )}
                       </div>
 
@@ -843,13 +944,15 @@ const Profile = () => {
                           <input
                             type="text"
                             name="occupation"
-                            value={profileData.occupation || ''}
+                            value={profileData.occupation || ""}
                             onChange={handleInputChange}
                             className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Your current occupation"
                           />
                         ) : (
-                          <p className="text-white text-lg py-2">{profileData.occupation || 'Not provided'}</p>
+                          <p className="text-white text-lg py-2">
+                            {profileData.occupation || "Not provided"}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -858,9 +961,17 @@ const Profile = () => {
 
                 {isEditing && (
                   <div>
-                    <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">Social Links</h4>
+                    <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">
+                      Social Links
+                    </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {['facebook', 'twitter', 'linkedin', 'github', 'portfolio'].map((platform) => (
+                      {[
+                        "facebook",
+                        "twitter",
+                        "linkedin",
+                        "github",
+                        "portfolio",
+                      ].map((platform) => (
                         <div key={platform}>
                           <label className="block text-sm font-medium text-gray-400 mb-2 capitalize">
                             {platform} URL
@@ -868,7 +979,7 @@ const Profile = () => {
                           <input
                             type="url"
                             name={`socialLinks.${platform}`}
-                            value={profileData.socialLinks?.[platform] || ''}
+                            value={profileData.socialLinks?.[platform] || ""}
                             onChange={handleInputChange}
                             placeholder={`https://${platform}.com/yourusername`}
                             className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -881,9 +992,17 @@ const Profile = () => {
 
                 {isEditing && (
                   <div>
-                    <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">Notification Preferences</h4>
+                    <h4 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-700">
+                      Notification Preferences
+                    </h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {Object.entries(profileData.notifications || { email: true, sms: false, push: true }).map(([key, value]) => (
+                      {Object.entries(
+                        profileData.notifications || {
+                          email: true,
+                          sms: false,
+                          push: true,
+                        }
+                      ).map(([key, value]) => (
                         <div key={key} className="flex items-center">
                           <input
                             type="checkbox"
@@ -893,7 +1012,10 @@ const Profile = () => {
                             onChange={handleInputChange}
                             className="h-5 w-5 rounded border-gray-700 bg-gray-900 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900 focus:ring-2"
                           />
-                          <label htmlFor={`notif-${key}`} className="ml-3 text-sm text-white capitalize">
+                          <label
+                            htmlFor={`notif-${key}`}
+                            className="ml-3 text-sm text-white capitalize"
+                          >
                             {key} notifications
                           </label>
                         </div>
@@ -915,25 +1037,29 @@ const Profile = () => {
             className="bg-gray-800 rounded-2xl p-6 max-w-md w-full"
           >
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-white">Verify Your Email</h3>
+              <h3 className="text-xl font-bold text-white">
+                Verify Your Email
+              </h3>
               <button
                 onClick={() => {
-                  setShowVerificationModal(false)
-                  setVerificationCode('')
+                  setShowVerificationModal(false);
+                  setVerificationCode("");
                 }}
                 className="text-gray-400 hover:text-white"
               >
                 <FiX size={24} />
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <p className="text-gray-300">
                 Enter the 6-digit verification code sent to:
                 <br />
-                <span className="font-bold text-white">{profileData?.email}</span>
+                <span className="font-bold text-white">
+                  {profileData?.email}
+                </span>
               </p>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-2">
                   Verification Code
@@ -942,18 +1068,22 @@ const Profile = () => {
                   ref={codeInputRef}
                   type="text"
                   value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={(e) =>
+                    setVerificationCode(
+                      e.target.value.replace(/\D/g, "").slice(0, 6)
+                    )
+                  }
                   placeholder="Enter 6-digit code"
                   className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white text-center text-2xl tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500"
                   maxLength={6}
                 />
               </div>
-              
+
               <div className="flex gap-3">
                 <button
                   onClick={() => {
-                    setShowVerificationModal(false)
-                    setVerificationCode('')
+                    setShowVerificationModal(false);
+                    setVerificationCode("");
                   }}
                   className="flex-1 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
                 >
@@ -970,21 +1100,21 @@ const Profile = () => {
                       Verifying...
                     </>
                   ) : (
-                    'Verify Code'
+                    "Verify Code"
                   )}
                 </button>
               </div>
-              
+
               <div className="text-center">
                 <button
                   onClick={sendVerificationCode}
                   disabled={isSendingCode || countdown > 0}
                   className="text-blue-400 hover:text-blue-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSendingCode ? 'Sending...' : 'Resend Code'}
+                  {isSendingCode ? "Sending..." : "Resend Code"}
                 </button>
               </div>
-              
+
               {verificationStatus.attemptsLeft < 4 && (
                 <div className="text-center text-sm text-yellow-400">
                   <FiAlertCircle className="inline-block mr-1" />
@@ -996,7 +1126,7 @@ const Profile = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default Profile
+export default Profile;

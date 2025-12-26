@@ -4,13 +4,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { AuthContext } from "@/AuthProvider/AuthProvider";
+import { useUserData } from "@/hooks/useUserData";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logOut } = useContext(AuthContext);
+  const { logOut } = useContext(AuthContext);
+
+  const { userData, loading } = useUserData();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -57,7 +60,6 @@ const Navbar = () => {
       setIsUserMenuOpen(false);
     } catch (error) {
       console.error("Logout error:", error);
-      alert(error.message || "Failed to logout");
     }
   };
 
@@ -73,14 +75,24 @@ const Navbar = () => {
     { name: "Contact", path: "/contact" },
   ];
 
+  if (loading) {
+    return (
+      <nav className="bg-[#0B1221] text-[#07A8ED] px-6 py-4 shadow-lg border-b border-[#1E3A8A] sticky top-0 z-40">
+        <div className="flex items-center justify-between">
+          <Link href="/" className="text-3xl font-extrabold">
+            <span className="text-[#07A8ED]">CWT</span>
+          </Link>
+          <div className="animate-pulse bg-gray-700 h-8 w-24 rounded"></div>
+        </div>
+      </nav>
+    );
+  }
+
   return (
     <>
       <nav className="bg-[#0B1221] text-[#07A8ED] px-6 py-4 shadow-lg border-b border-[#1E3A8A] sticky top-0 z-40">
         <div className="flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-3xl font-extrabold cursor-pointer select-none"
-          >
+          <Link href="/" className="text-3xl font-extrabold">
             <span className="text-[#07A8ED] hover:text-white transition-colors">
               CWT
             </span>
@@ -107,26 +119,26 @@ const Navbar = () => {
               ))}
             </ul>
 
-            {user ? (
+            {userData ? (
               <div className="relative user-menu">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="user-menu-button flex items-center space-x-2 border border-[#07A8ED] text-[#07A8ED] px-6 py-2 rounded-lg font-bold hover:bg-[#07A8ED] hover:text-[#0B1221] transition-all duration-300"
                 >
-                  {user.photoURL ? (
+                  {userData?.photoURL ? (
                     <Image
-                      src={user.photoURL}
-                      alt={user.displayName || "User"}
+                      src={userData.photoURL}
+                      alt={userData.name || "User"}
                       width={32}
                       height={32}
                       className="rounded-full"
                     />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-[#07A8ED] flex items-center justify-center text-[#0B1221] font-bold">
-                      {user.displayName?.[0] || user.email?.[0] || "U"}
+                      {userData.name?.[0] || userData.email?.[0] || "U"}
                     </div>
                   )}
-                  <span>{user.displayName || "Account"}</span>
+                  <span>{userData.name || "Account"}</span>
                   <svg
                     className={`w-4 h-4 transition-transform ${
                       isUserMenuOpen ? "rotate-180" : ""
@@ -149,10 +161,10 @@ const Navbar = () => {
                     <div className="py-2">
                       <div className="px-4 py-3 border-b border-[#1E3A8A]">
                         <p className="text-sm font-medium text-white">
-                          {user.displayName || "User"}
+                          {userData.name || "User"}
                         </p>
                         <p className="text-xs text-gray-400 truncate">
-                          {user.email}
+                          {userData.email}
                         </p>
                       </div>
                       <Link
@@ -190,7 +202,7 @@ const Navbar = () => {
           </div>
 
           <div className="md:hidden flex items-center space-x-4">
-            {user ? (
+            {userData ? (
               <div className="flex items-center space-x-3">
                 <Link
                   href="/dashboard"
@@ -217,8 +229,6 @@ const Navbar = () => {
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="menu-button text-[#07A8ED] hover:text-white transition p-2 rounded-lg hover:bg-[#1E3A8A]/30"
-              type="button"
-              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             >
               {isMenuOpen ? (
                 <svg
@@ -273,8 +283,6 @@ const Navbar = () => {
           <button
             onClick={() => setIsMenuOpen(false)}
             className="text-[#07A8ED] hover:text-white p-2 rounded-lg hover:bg-[#1E3A8A]/30 transition-colors"
-            type="button"
-            aria-label="Close menu"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -294,28 +302,28 @@ const Navbar = () => {
         </div>
 
         <div className="p-4">
-          {user && (
+          {userData && (
             <div className="mb-6 p-4 bg-[#1E3A8A]/20 rounded-lg">
               <div className="flex items-center space-x-3">
-                {user.photoURL ? (
+                {userData?.photoURL ? (
                   <Image
-                    src={user.photoURL}
-                    alt={user.displayName || "User"}
+                    src={userData.photoURL}
+                    alt={userData.name || "User"}
                     width={40}
                     height={40}
                     className="rounded-full"
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-[#07A8ED] flex items-center justify-center text-[#0B1221] font-bold text-lg">
-                    {user.displayName?.[0] || user.email?.[0] || "U"}
+                    {userData.name?.[0] || userData.email?.[0] || "U"}
                   </div>
                 )}
                 <div>
                   <p className="font-medium text-white">
-                    {user.displayName || "User"}
+                    {userData.name || "User"}
                   </p>
                   <p className="text-sm text-gray-400 truncate">
-                    {user.email}
+                    {userData.email}
                   </p>
                 </div>
               </div>
@@ -361,7 +369,7 @@ const Navbar = () => {
             ))}
           </ul>
 
-          {!user && (
+          {!userData && (
             <div className="mt-8 pt-6 border-t border-[#1E3A8A]/50">
               <Link
                 href="/login"

@@ -1,13 +1,13 @@
-import AboutAdmin from "@/components/AboutAdmin";
-import Curriculum from "@/components/Curriculum";
-import Hero from "@/components/Hero";
+import AboutAdmin from "@/components/Home/AboutAdmin";
+import Curriculum from "@/components/Home/Curriculum";
+import Hero from "@/components/Home/Hero";
 import Certificate from "@/components/Home/Certificate";
 import Community from "@/components/Home/Community";
 import Contact from "@/components/Home/Contact";
 import Pricing from "@/components/Home/Pricing";
-import Solve from "@/components/Solve";
-import WhatProjectYoDO from "@/components/WhatProjectYoDO";
-import WhatYouLearn from "@/components/WhatYouLearn";
+import Solve from "@/components/Home/Solve";
+import WhatProjectYoDO from "@/components/Home/WhatProjectYoDO";
+import WhatYouLearn from "@/components/Home/WhatYouLearn";
 import React from "react";
 
 const page = () => {
