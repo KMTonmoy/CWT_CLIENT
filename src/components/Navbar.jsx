@@ -5,6 +5,9 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { AuthContext } from "@/AuthProvider/AuthProvider";
 import { useUserData } from "@/hooks/useUserData";
+import { IoMdCall } from "react-icons/io";
+
+import { FiBookOpen, FiHome, FiLogOut, FiUser } from "react-icons/fi";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -15,6 +18,10 @@ const Navbar = () => {
 
   const { userData, loading } = useUserData();
 
+  // Check if user is admin
+  const isAdmin = userData?.role === "admin" || userData?.role === "superadmin";
+  const isProStudent = userData?.role === "prostudent" || userData?.role === "pro_student";
+  
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -58,6 +65,7 @@ const Navbar = () => {
     try {
       await logOut();
       setIsUserMenuOpen(false);
+      setIsMenuOpen(false);
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -69,10 +77,10 @@ const Navbar = () => {
   };
 
   const navItems = [
-    { name: "Home", path: "/" },
-    { name: "Courses", path: "/course" },
-    { name: "About", path: "/about" },
-    { name: "Contact", path: "/contact" },
+    { name: "Home", path: "/", icon: <FiHome size={18} /> },
+    { name: "Courses", path: "/courses", icon: <FiBookOpen size={18} /> },
+    { name: "About", path: "/about", icon: <FiUser size={18} /> },
+    { name: "Contact", path: "/contact", icon: <IoMdCall  size={18} /> },
   ];
 
   if (loading) {
@@ -105,7 +113,7 @@ const Navbar = () => {
                   <Link
                     href={item.path}
                     className={`
-                      px-4 py-2 rounded-lg transition-all duration-200
+                      px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2
                       ${
                         isActive(item.path)
                           ? "text-white bg-[#1E3A8A]"
@@ -113,6 +121,7 @@ const Navbar = () => {
                       }
                     `}
                   >
+                    {item.icon}
                     {item.name}
                   </Link>
                 </li>
@@ -134,7 +143,11 @@ const Navbar = () => {
                       className="rounded-full"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-[#07A8ED] flex items-center justify-center text-[#0B1221] font-bold">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[#0B1221] font-bold ${
+                      isAdmin ? "bg-red-500" : 
+                      isProStudent ? "bg-purple-500" : 
+                      "bg-[#07A8ED]"
+                    }`}>
                       {userData.name?.[0] || userData.email?.[0] || "U"}
                     </div>
                   )}
@@ -157,34 +170,66 @@ const Navbar = () => {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-[#0B1221] border border-[#1E3A8A] rounded-lg shadow-xl z-50">
+                  <div className="absolute right-0 mt-2 w-56 bg-[#0B1221] border border-[#1E3A8A] rounded-lg shadow-xl z-50">
                     <div className="py-2">
                       <div className="px-4 py-3 border-b border-[#1E3A8A]">
-                        <p className="text-sm font-medium text-white">
-                          {userData.name || "User"}
-                        </p>
-                        <p className="text-xs text-gray-400 truncate">
-                          {userData.email}
-                        </p>
+                        <div className="flex items-center gap-3">
+                        
+                          <div>
+                            <p className="text-sm font-medium text-white">
+                              {userData.name || "User"}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                isAdmin ? "bg-red-500/20 text-red-300" : 
+                                isProStudent ? "bg-purple-500/20 text-purple-300" : 
+                                "bg-blue-500/20 text-blue-300"
+                              }`}>
+                                {isAdmin ? "Admin" : isProStudent ? "Pro Student" : "Student"}
+                              </span>
+                              <p className="text-xs text-gray-400 truncate max-w-[120px]">
+                                {userData.email}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <Link
-                        href="/dashboard"
-                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-[#1E3A8A] hover:text-white transition-colors"
-                        onClick={() => setIsUserMenuOpen(false)}
-                      >
-                        Dashboard
-                      </Link>
+                      
+                      {/* Show Dashboard only for admins, My Classes for students */}
+                      {isAdmin ? (
+                        <Link
+                          href="/dashboard"
+                          className="flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-[#1E3A8A] hover:text-white transition-colors border-b border-[#1E3A8A]/30"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <IoMdCall  size={16} />
+                          Admin Dashboard
+                        </Link>
+                      ) : (
+                        <Link
+                          href="/my-classes"
+                          className="flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-[#1E3A8A] hover:text-white transition-colors border-b border-[#1E3A8A]/30"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <FiBookOpen size={16} />
+                          My Classes
+                        </Link>
+                      )}
+                      
                       <Link
                         href="/profile"
-                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-[#1E3A8A] hover:text-white transition-colors"
+                        className="flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-[#1E3A8A] hover:text-white transition-colors border-b border-[#1E3A8A]/30"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
-                        Profile
+                        <FiUser size={16} />
+                        My Profile
                       </Link>
+                      
                       <button
                         onClick={handleLogout}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-colors"
+                        className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-colors"
                       >
+                        <FiLogOut size={16} />
                         Logout
                       </button>
                     </div>
@@ -194,8 +239,9 @@ const Navbar = () => {
             ) : (
               <Link
                 href="/login"
-                className="border border-[#07A8ED] text-[#07A8ED] px-6 py-2 rounded-lg font-bold hover:bg-[#07A8ED] hover:text-[#0B1221] transition-all duration-300"
+                className="border border-[#07A8ED] text-[#07A8ED] px-6 py-2 rounded-lg font-bold hover:bg-[#07A8ED] hover:text-[#0B1221] transition-all duration-300 flex items-center gap-2"
               >
+                <FiUser size={18} />
                 Login
               </Link>
             )}
@@ -204,12 +250,21 @@ const Navbar = () => {
           <div className="md:hidden flex items-center space-x-4">
             {userData ? (
               <div className="flex items-center space-x-3">
-                <Link
-                  href="/dashboard"
-                  className="text-sm text-[#07A8ED] hover:text-white"
-                >
-                  Dashboard
-                </Link>
+                {isAdmin ? (
+                  <Link
+                    href="/dashboard"
+                    className="text-sm text-[#07A8ED] hover:text-white"
+                  >
+                    Dashboard
+                  </Link>
+                ) : (
+                  <Link
+                    href="/my-classes"
+                    className="text-sm text-[#07A8ED] hover:text-white"
+                  >
+                    My Classes
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
                   className="border border-red-500 text-red-500 px-3 py-1 rounded-lg text-sm hover:bg-red-500 hover:text-white transition-all"
@@ -274,7 +329,7 @@ const Navbar = () => {
       />
 
       <div
-        className={`mobile-menu fixed top-0 left-0 h-full w-64 bg-[#0B1221] shadow-2xl z-50 transform transition-transform duration-300 ease-out md:hidden ${
+        className={`mobile-menu fixed top-0 left-0 h-full w-72 bg-[#0B1221] shadow-2xl z-50 transform transition-transform duration-300 ease-out md:hidden ${
           isMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -304,41 +359,55 @@ const Navbar = () => {
         <div className="p-4">
           {userData && (
             <div className="mb-6 p-4 bg-[#1E3A8A]/20 rounded-lg">
-              <div className="flex items-center space-x-3">
-                {userData?.photoURL ? (
-                  <Image
-                    src={userData.photoURL}
-                    alt={userData.name || "User"}
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-[#07A8ED] flex items-center justify-center text-[#0B1221] font-bold text-lg">
-                    {userData.name?.[0] || userData.email?.[0] || "U"}
-                  </div>
-                )}
+              <div className="flex items-center space-x-3 mb-3">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg ${
+                  isAdmin ? "bg-red-500" : 
+                  isProStudent ? "bg-purple-500" : 
+                  "bg-[#07A8ED]"
+                }`}>
+                  {userData.name?.[0] || userData.email?.[0] || "U"}
+                </div>
                 <div>
                   <p className="font-medium text-white">
                     {userData.name || "User"}
                   </p>
-                  <p className="text-sm text-gray-400 truncate">
+                  <p className="text-xs text-gray-400 truncate">
                     {userData.email}
                   </p>
+                  <span className={`text-xs mt-1 px-2 py-0.5 rounded-full ${
+                    isAdmin ? "bg-red-500/20 text-red-300" : 
+                    isProStudent ? "bg-purple-500/20 text-purple-300" : 
+                    "bg-blue-500/20 text-blue-300"
+                  }`}>
+                    {isAdmin ? "Admin" : isProStudent ? "Pro Student" : "Student"}
+                  </span>
                 </div>
               </div>
               <div className="mt-3 flex space-x-2">
-                <Link
-                  href="/dashboard"
-                  className="flex-1 text-center py-2 bg-[#07A8ED] text-[#0B1221] rounded-lg font-medium hover:bg-[#07A8ED]/90 transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Dashboard
-                </Link>
+                {isAdmin ? (
+                  <Link
+                    href="/dashboard"
+                    className="flex-1 text-center py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <IoMdCall  size={16} />
+                    Dashboard
+                  </Link>
+                ) : (
+                  <Link
+                    href="/my-classes"
+                    className="flex-1 text-center py-2 bg-[#07A8ED] text-[#0B1221] rounded-lg font-medium hover:bg-[#07A8ED]/90 transition-colors flex items-center justify-center gap-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <FiBookOpen size={16} />
+                    My Classes
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
-                  className="flex-1 text-center py-2 border border-red-500 text-red-500 rounded-lg font-medium hover:bg-red-500 hover:text-white transition-colors"
+                  className="flex-1 text-center py-2 border border-red-500 text-red-500 rounded-lg font-medium hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center gap-2"
                 >
+                  <FiLogOut size={16} />
                   Logout
                 </button>
               </div>
@@ -351,7 +420,7 @@ const Navbar = () => {
                 <Link
                   href={item.path}
                   className={`
-                    flex items-center px-4 py-3 rounded-lg transition-all duration-200 text-lg font-medium
+                    flex items-center px-4 py-3 rounded-lg transition-all duration-200 text-lg font-medium gap-3
                     ${
                       isActive(item.path)
                         ? "text-white bg-gradient-to-r from-[#1E3A8A] to-[#07A8ED]/30"
@@ -360,9 +429,10 @@ const Navbar = () => {
                   `}
                   onClick={() => setIsMenuOpen(false)}
                 >
+                  {item.icon}
                   <span>{item.name}</span>
                   {isActive(item.path) && (
-                    <span className="ml-2 w-2 h-2 bg-[#07A8ED] rounded-full"></span>
+                    <span className="ml-auto w-2 h-2 bg-[#07A8ED] rounded-full"></span>
                   )}
                 </Link>
               </li>
@@ -373,9 +443,10 @@ const Navbar = () => {
             <div className="mt-8 pt-6 border-t border-[#1E3A8A]/50">
               <Link
                 href="/login"
-                className="block w-full text-center border-2 border-[#07A8ED] text-[#07A8ED] py-3 px-4 rounded-lg font-bold hover:bg-[#07A8ED] hover:text-[#0B1221] transition-all duration-300"
+                className="block w-full text-center border-2 border-[#07A8ED] text-[#07A8ED] py-3 px-4 rounded-lg font-bold hover:bg-[#07A8ED] hover:text-[#0B1221] transition-all duration-300 flex items-center justify-center gap-2"
                 onClick={() => setIsMenuOpen(false)}
               >
+                <FiUser size={18} />
                 Login
               </Link>
             </div>

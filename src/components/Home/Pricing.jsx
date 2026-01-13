@@ -1,331 +1,134 @@
-"use client";
-import React, { useRef, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  FaCheckCircle,
-  FaWhatsapp,
-  FaClock,
-  FaVideo,
-  FaProjectDiagram,
-  FaCertificate,
-  FaUserGraduate,
-  FaShieldAlt,
-  FaUsers,
-  FaStar,
-  FaBolt,
-  FaMoneyBillAlt,
-  FaChartLine,
-} from "react-icons/fa";
-import { RiSecurePaymentFill, RiDiscountPercentFill } from "react-icons/ri";
+import { Check, Zap, Clock, Video, Award, Users, Link2 } from 'lucide-react'
+import React from 'react'
+import Link from 'next/link'
 
 const Pricing = () => {
   const features = [
-    { icon: <FaVideo />, text: "৮০+ ঘন্টার ভিডিও কনটেন্ট" },
-    { icon: <FaProjectDiagram />, text: "১২+ রিয়েল প্রজেক্ট" },
-    { icon: <FaUserGraduate />, text: "লাইফটাইম অ্যাক্সেস" },
-    { icon: <FaCertificate />, text: "সার্টিফিকেট" },
-    { icon: <FaUsers />, text: "প্রাইভেট গ্রুপ" },
-    { icon: <RiSecurePaymentFill />, text: "মানি ব্যাক গ্যারান্টি" },
-  ];
-
-  const paymentMethods = [
-    { name: "বিকাশ", color: "bg-green-500" },
-    { name: "নগদ", color: "bg-blue-500" },
-    { name: "রকেট", color: "bg-purple-500" },
-    { name: "ক্যাশ", color: "bg-yellow-500" },
-  ];
-
-  const whatsappLink =
-    "https://wa.me/8801622564462?text=আমি%20CodeWithTonmoy%20এর%20ওয়েব%20ডেভেলপমেন্ট%20কোর্সে%20এনরোল%20করতে%20চাই";
+    { icon: <Video size={20} />, text: "৮০+ ঘন্টার ভিডিও কনটেন্ট" },
+    { icon: <Zap size={20} />, text: "১২+ রিয়েল প্রজেক্ট" },
+    { icon: <Clock size={20} />, text: "লাইফটাইম অ্যাক্সেস" },
+    { icon: <Award size={20} />, text: "সার্টিফিকেট" },
+    { icon: <Users size={20} />, text: "প্রাইভেট গ্রুপ সাপোর্ট" },
+    { icon: <Check size={20} />, text: "রেগুলার আপডেট" }
+  ]
 
   return (
-    <div className="relative py-12 md:py-16 px-4 sm:px-6 lg:px-8   overflow-hidden">
-      <div className="absolute inset-0 z-0" />
-
-      <div className="relative z-10 max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-8 md:mb-12"
-        >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3 md:mb-4">
-            <span className="text-[#07A8ED]">সম্পূর্ণ কোর্স</span> মাত্র
-            <motion.span
-              initial={{ scale: 0 }}
-              whileInView={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200 }}
-              className="inline-block mx-2 bg-gradient-to-r from-[#07A8ED] to-[#3B82F6] bg-clip-text text-transparent"
-            >
-              ৫,৫০০ টাকা
-            </motion.span>
+    <div className="py-16 px-4 ">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            কোর্স ফি ও <span className="text-green-400">সুবিধাসমূহ</span>
           </h2>
-          <p className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto">
-            ৬ মাসের সম্পূর্ণ MERN স্ট্যাক ওয়েব ডেভেলপমেন্ট কোর্স
+          <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto">
+            আমাদের ৬ মাসের MERN স্ট্যাক ওয়েব ডেভেলপমেন্ট কোর্সে তুমি যা পাচ্ছো
           </p>
-        </motion.div>
-
-        <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="lg:col-span-2"
-          >
-            <div className="bg-[#1A2036]/80 backdrop-blur-sm rounded-xl md:rounded-2xl p-6 md:p-8 border border-[#1E3A8A]/50">
-              <h3 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-6 flex items-center">
-                <FaBolt className="text-yellow-400 mr-2 md:mr-3" />
-                এই কোর্সে যা যা পাবেন
-              </h3>
-
-              <div className="grid sm:grid-cols-2 gap-3 md:gap-4">
-                {features.map((feature, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ scale: 1.02 }}
-                    className="flex items-center p-3 md:p-4 bg-[#0B1221] rounded-lg"
-                  >
-                    <div className="text-[#07A8ED] text-lg md:text-xl mr-3">
-                      {feature.icon}
-                    </div>
-                    <span className="text-gray-200 text-sm md:text-base">
-                      {feature.text}
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
-
-              <div className="mt-6 md:mt-8 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="text-center p-3 md:p-4 bg-[#0B1221] rounded-lg"
-                >
-                  <div className="text-xl md:text-2xl font-bold text-[#07A8ED]">
-                    ৮,৫০০+
-                  </div>
-                  <div className="text-gray-400 text-xs md:text-sm">
-                    শিক্ষার্থী
-                  </div>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="text-center p-3 md:p-4 bg-[#0B1221] rounded-lg"
-                >
-                  <div className="text-xl md:text-2xl font-bold text-[#07A8ED]">
-                    ৪.৯
-                  </div>
-                  <div className="text-gray-400 text-xs md:text-sm">রেটিং</div>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="text-center p-3 md:p-4 bg-[#0B1221] rounded-lg"
-                >
-                  <div className="text-xl md:text-2xl font-bold text-[#07A8ED]">
-                    ১০০%
-                  </div>
-                  <div className="text-gray-400 text-xs md:text-sm">
-                    প্রোজেক্ট বেসড
-                  </div>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="text-center p-3 md:p-4 bg-[#0B1221] rounded-lg"
-                >
-                  <div className="text-xl md:text-2xl font-bold text-[#07A8ED]">
-                    ২৪/৭
-                  </div>
-                  <div className="text-gray-400 text-xs md:text-sm">
-                    সাপোর্ট
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="lg:col-span-1"
-          >
-            <div className="bg-gradient-to-br from-[#1A2036] to-[#0F172A] rounded-xl md:rounded-2xl p-6 md:p-8 border-2 border-[#07A8ED] shadow-2xl shadow-[#07A8ED]/20 relative overflow-hidden">
-              <motion.div
-                animate={{ rotate: [0, 360] }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-r from-[#07A8ED]/10 to-[#3B82F6]/10 rounded-full"
-              />
-
-              <div className="text-center mb-4 md:mb-6">
-                <div className="text-gray-400 mb-1 md:mb-2 text-sm md:text-base">
-                  সম্পূর্ণ কোর্স ফি
-                </div>
-                <motion.div
-                  initial={{ scale: 0.5 }}
-                  whileInView={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 200 }}
-                  className="flex items-center justify-center mb-2"
-                >
-                  <span className="text-4xl sm:text-5xl md:text-6xl font-bold text-white">
-                    ৫,৫০০
-                  </span>
-                  <span className="text-xl md:text-2xl text-gray-300 ml-1 md:ml-2">
-                    টাকা
-                  </span>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  className="flex items-center justify-center text-gray-400 text-xs md:text-sm"
-                >
-                  <del className="mr-2">৮,৫০০ টাকা</del>
-                  <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full">
-                    <RiDiscountPercentFill className="inline mr-1" />
-                    ৩৫% ছাড়
-                  </span>
-                </motion.div>
-              </div>
-
-              <div className="mb-4 md:mb-6">
-                <div className="text-gray-300 mb-2 md:mb-3 text-sm md:text-base">
-                  পেমেন্ট মেথড
-                </div>
-                <div className="flex flex-wrap gap-1 md:gap-2">
-                  {paymentMethods.map((method, index) => (
-                    <motion.div
-                      key={index}
-                      whileHover={{ y: -2 }}
-                      className={`${method.color} text-white px-2 md:px-3 py-1 md:py-2 rounded-lg flex items-center text-xs md:text-sm`}
-                    >
-                      <FaMoneyBillAlt className="mr-1 md:mr-2" />
-                      {method.name}
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-
-              <motion.a
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
-                className="block w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white text-center py-3 md:py-4 rounded-xl font-bold text-base md:text-lg mb-3 md:mb-4 hover:shadow-xl hover:shadow-green-500/30 transition-all flex items-center justify-center"
-              >
-                <FaWhatsapp className="mr-2 md:mr-3" size={20} />
-                WhatsApp এ এনরোল করুন
-              </motion.a>
-
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className="flex items-center justify-center p-2 md:p-3 bg-[#0B1221] rounded-lg"
-              >
-                <FaShieldAlt className="text-yellow-400 mr-2" />
-             
-              </motion.div>
-
-              <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="mt-4 md:mt-6 text-center"
-              >
-                <div className="inline-flex items-center px-3 md:px-4 py-1 md:py-2 bg-red-500/20 border border-red-500/30 rounded-full">
-                  <FaClock className="text-red-400 mr-1 md:mr-2" />
-                  <span className="text-red-400 text-xs md:text-sm">
-                    সীমিত সময়ের অফার
-                  </span>
-                </div>
-              </motion.div>
-            </div>
-
-            <div className="mt-4 text-center text-gray-400 text-xs md:text-sm">
-              <p>⚡ অন্যান্য ইনস্টিটিউটে ১৫,০০০-২০,০০০ টাকা</p>
-              <p>✨ আমরা বাংলা ভাষায় সহজভাবে শেখাই</p>
-            </div>
-          </motion.div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-8 md:mt-12 bg-gradient-to-r from-[#07A8ED]/10 to-[#3B82F6]/10 rounded-xl md:rounded-2xl p-6 md:p-8 border border-[#07A8ED]/30"
-        >
-          <div className="grid md:grid-cols-3 gap-4 md:gap-6">
-            <motion.div
-              whileHover={{ y: -5 }}
-              className="text-center p-4 md:p-6"
-            >
-              <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-[#07A8ED] to-[#3B82F6] rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
-                <FaStar className="text-white text-xl md:text-2xl" />
+        <div className="grid lg:grid-cols-2 gap-8 items-center">
+          {/* Left - Features */}
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-green-500/10 rounded-lg">
+                <Zap className="text-green-400" size={24} />
               </div>
-              <h4 className="text-lg md:text-xl font-bold text-white mb-1 md:mb-2">
-                জব রেফারেন্স
-              </h4>
-              <p className="text-gray-300 text-sm md:text-base">
-                সফল কমপ্লিশনে ইন্টার্ন সুযোগ
-              </p>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ y: -5 }}
-              className="text-center p-4 md:p-6"
-            >
-              <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
-                <FaCheckCircle className="text-white text-xl md:text-2xl" />
-              </div>
-              <h4 className="text-lg md:text-xl font-bold text-white mb-1 md:mb-2">
-                লাইভ ক্লাস
-              </h4>
-              <p className="text-gray-300 text-sm md:text-base">
-                সাপ্তাহিক লাইভ সেশন
-              </p>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ y: -5 }}
-              className="text-center p-4 md:p-6"
-            >
-              <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
-                <FaChartLine className="text-white text-xl md:text-2xl" />
-              </div>
-              <h4 className="text-lg md:text-xl font-bold text-white mb-1 md:mb-2">
-                ক্যারিয়ার গাইডেন্স
-              </h4>
-              <p className="text-gray-300 text-sm md:text-base">
-                রিজুমি ও ইন্টারভিউ প্রিপারেশন
-              </p>
-            </motion.div>
+              <h3 className="text-2xl font-bold text-white">কোর্স ফিচারস</h3>
+            </div>
+            
+            <div className="space-y-4">
+              {features.map((feature, index) => (
+                <div 
+                  key={index}
+                  className="flex items-center gap-4 p-4 bg-gray-900/50 rounded-xl hover:bg-gray-900 transition-all"
+                >
+                  <div className="p-2 bg-green-500/20 rounded-lg">
+                    <div className="text-green-400">{feature.icon}</div>
+                  </div>
+                  <span className="text-gray-200">{feature.text}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="text-center mt-6 md:mt-8">
-            <motion.a
-              href={whatsappLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              whileHover={{ scale: 1.05 }}
-              className="inline-flex items-center px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-[#07A8ED] to-[#3B82F6] text-white rounded-xl font-bold text-base md:text-lg hover:shadow-xl hover:shadow-[#07A8ED]/30 transition-all"
-            >
-              <FaWhatsapp className="mr-2 md:mr-3" />
-              এখনই ফ্রি কনসালটেশন নিন
-            </motion.a>
-            <p className="text-gray-400 mt-3 md:mt-4 text-sm md:text-base">
-              কল করুন:{" "}
-              <a
-                href="tel:+8801622564462"
-                className="text-[#07A8ED] hover:underline"
-              >
-                +৮৮০ ১৬২২৫৬৪৪৬২
-              </a>
-            </p>
+          {/* Right - Pricing Card */}
+          <div className="relative">
+            <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl p-8 border-2 border-green-500/30 shadow-2xl shadow-green-500/10">
+              {/* Price Badge */}
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-2 rounded-full font-bold text-lg shadow-lg">
+                  স্পেশাল অফার
+                </div>
+              </div>
+
+              <div className="text-center pt-4">
+                <div className="mb-6">
+                  <span className="text-gray-400 text-lg line-through">১০,০০০ টাকা</span>
+                  <div className="flex items-center justify-center gap-2 mt-2">
+                    <span className="text-5xl font-bold text-white">৫,৫০০</span>
+                    <span className="text-2xl text-gray-300">টাকা</span>
+                  </div>
+                  <p className="text-green-400 mt-2">৪৫% ডিসকাউন্ট</p>
+                </div>
+
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center justify-center gap-2 text-gray-300">
+                    <Clock size={18} />
+                    <span>৬ মাসের কোর্স</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2 text-gray-300">
+                    <Users size={18} />
+                    <span>লাইফটাইম সাপোর্ট</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2 text-gray-300">
+                    <Award size={18} />
+                    <span>কোর্স কমপ্লিশন সার্টিফিকেট</span>
+                  </div>
+                </div>
+
+                <Link href="/courses" className="block">
+                  <button className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-[1.02] shadow-lg shadow-green-500/25 flex items-center justify-center gap-3">
+                    <Zap size={20} />
+                    এখনই Enroll করুন
+                    <Link2 size={20} />
+                  </button>
+                </Link>
+
+                <p className="text-gray-400 text-sm mt-4">
+                  * ৭ দিনের মানি ব্যাক গ্যারান্টি সহ
+                </p>
+              </div>
+            </div>
+
+            {/* Additional Info */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-gray-800/30 rounded-xl">
+                <div className="text-green-400 font-bold text-xl">১০০%</div>
+                <div className="text-gray-300 text-sm">প্রাকটিক্যাল</div>
+              </div>
+              <div className="text-center p-4 bg-gray-800/30 rounded-xl">
+                <div className="text-green-400 font-bold text-xl">২৪/৭</div>
+                <div className="text-gray-300 text-sm">সাপোর্ট</div>
+              </div>
+              <div className="text-center p-4 bg-gray-800/30 rounded-xl">
+                <div className="text-green-400 font-bold text-xl">৫০+</div>
+                <div className="text-gray-300 text-sm">স্ট্রাডেন্ট</div>
+              </div>
+            </div>
           </div>
-        </motion.div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="text-center mt-12">
+          <p className="text-gray-300 mb-4">
+            📞 কোর্স সম্পর্কে বিস্তারিত জানতে কল করুন: <span className="text-white font-bold">০১৭xx-xxxxxx</span>
+          </p>
+          <p className="text-gray-400 text-sm">
+            অফার সীমিত সময়ের জন্য | আজই রেজিস্ট্রেশন করুন
+          </p>
+        </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Pricing;
+export default Pricing

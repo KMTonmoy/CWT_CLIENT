@@ -1,0 +1,14 @@
+1,welcome to the course 
+0,orentation what matters in this course 
+1: html css and github as a beginner 
+2: responsive web layout
+3: css frameworks 
+4: hello javascript
+5: itegrate javascript api 
+7: ibntroduction to simpl,e react
+8: react routeer and state managemnet
+9: react authentication
+10: backend and  databae intrigation
+11: backend with jwt axios intreptior
+12: final project compleate website
+milestone 13: explore more and get rady to be hired
