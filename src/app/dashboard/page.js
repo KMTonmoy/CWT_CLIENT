@@ -1,26 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  FiUsers,
-  FiDollarSign,
-  FiSearch,
-  FiEye,
-  FiEdit2,
-  FiTrash2,
-  FiTrendingUp,
-  FiTrendingDown,
-  FiCheckCircle,
-  FiClock,
-  FiRefreshCw,
-  FiUser,
-  FiShield,
-  FiDatabase,
-  FiSave,
-  FiX,
-} from "react-icons/fi";
+ 
 import axios from "axios";
 import toast from "react-hot-toast";
+import { FiCheckCircle, FiChevronDown, FiClock, FiDatabase, FiEdit2, FiEye, FiRefreshCw, FiSave, FiSearch, FiShield, FiTrash2, FiTrendingDown, FiTrendingUp, FiUser, FiUsers, FiX } from "react-icons/fi";
+import { ChessQueen } from "lucide-react";
+import { FaCrown } from "react-icons/fa";
 
 const Dashboard = () => {
   const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -37,6 +23,7 @@ const Dashboard = () => {
     revenue: 0,
     adminUsers: 0,
     studentUsers: 0,
+    proStudentUsers: 0,
   });
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserModal, setShowUserModal] = useState(false);
@@ -58,13 +45,14 @@ const Dashboard = () => {
     education: "",
   });
 
-  const [newUser, setNewUser] = useState({
-    name: "",
-    email: "",
-    role: "student",
-    phone: "",
-    status: "active",
-  });
+  // All available roles
+  const availableRoles = [
+    { value: "student", label: "Student", color: "bg-gray-500/20 text-gray-400" },
+    { value: "prostudent", label: "Pro Student", color: "bg-purple-500/20 text-purple-400" },
+    { value: "admin", label: "Admin", color: "bg-blue-500/20 text-blue-400" },
+    { value: "superadmin", label: "Super Admin", color: "bg-red-500/20 text-red-400" },
+    { value: "editor", label: "Editor", color: "bg-green-500/20 text-green-400" },
+  ];
 
   // Fetch all users
   const fetchUsers = async () => {
@@ -89,6 +77,9 @@ const Dashboard = () => {
         const studentUsers = usersData.filter(
           (u) => u.role === "student"
         ).length;
+        const proStudentUsers = usersData.filter(
+          (u) => u.role === "prostudent" || u.role === "pro_student" || u.role === "ProStudent"
+        ).length;
 
         setStats({
           totalUsers,
@@ -97,10 +88,12 @@ const Dashboard = () => {
           revenue: 0,
           adminUsers,
           studentUsers,
+          proStudentUsers,
         });
       }
     } catch (error) {
       console.error("Error fetching users:", error);
+      toast.error("Failed to fetch users");
     } finally {
       setLoading(false);
     }
@@ -165,21 +158,18 @@ const Dashboard = () => {
     if (!editingUser) return;
 
     try {
-      // Update user via backend API
       const response = await axios.patch(
         `${BASE_URL}/api/users/id/${editingUser._id}`,
         editFormData
       );
 
       if (response.data.success) {
-        // Update local state
         setUsers(
           users.map((user) =>
             user._id === editingUser._id ? response.data.user : user
           )
         );
 
-        // Reset editing state
         setEditingUser(null);
         setEditFormData({
           name: "",
@@ -224,6 +214,30 @@ const Dashboard = () => {
     });
   };
 
+  // Quick role change
+  const handleQuickRoleChange = async (userId, newRole) => {
+    try {
+      const response = await axios.patch(
+        `${BASE_URL}/api/users/id/${userId}`,
+        { role: newRole }
+      );
+
+      if (response.data.success) {
+        setUsers(
+          users.map((user) =>
+            user._id === userId ? response.data.user : user
+          )
+        );
+
+        fetchUsers(); // Refresh stats
+        toast.success(`Role changed to ${newRole}`);
+      }
+    } catch (error) {
+      console.error("Error changing role:", error);
+      toast.error("Failed to change role");
+    }
+  };
+
   // Delete user
   const handleDeleteUser = async () => {
     if (!userToDelete) return;
@@ -234,13 +248,12 @@ const Dashboard = () => {
       setShowDeleteModal(false);
       setUserToDelete(null);
       fetchUsers(); // Refresh stats
+      toast.success("User deleted successfully!");
     } catch (error) {
       console.error("Error deleting user:", error);
-      alert("Failed to delete user");
+      toast.error("Failed to delete user");
     }
   };
-
-   
 
   // Update user status
   const handleUpdateStatus = async (userId, newStatus) => {
@@ -249,7 +262,6 @@ const Dashboard = () => {
         status: newStatus,
       });
 
-      // Update local state
       setUsers(
         users.map((user) =>
           user.uid === userId ? { ...user, status: newStatus } : user
@@ -257,8 +269,33 @@ const Dashboard = () => {
       );
 
       fetchUsers(); // Refresh stats
+      toast.success(`Status changed to ${newStatus}`);
     } catch (error) {
       console.error("Error updating user:", error);
+      toast.error("Failed to update status");
+    }
+  };
+
+  // Get role color
+  const getRoleColor = (role) => {
+    const roleObj = availableRoles.find(r => r.value === role);
+    return roleObj ? roleObj.color : "bg-gray-500/20 text-gray-400";
+  };
+
+  // Get role icon
+  const getRoleIcon = (role) => {
+    switch (role) {
+      case "admin":
+      case "superadmin":
+        return <FiShield className="w-3 h-3 mr-1" />;
+      case "prostudent":
+      case "pro_student":
+      case "ProStudent":
+        return <ChessQueen  className="w-3 h-3 mr-1" />;
+      case "editor":
+        return <FiEdit2 className="w-3 h-3 mr-1" />;
+      default:
+        return <FiUser className="w-3 h-3 mr-1" />;
     }
   };
 
@@ -297,19 +334,19 @@ const Dashboard = () => {
       trend: "up",
     },
     {
-      title: "Student Users",
-      value: stats.studentUsers,
-      icon: <FiUser className="text-pink-500" />,
-      color: "from-pink-500/20 to-rose-600/20",
+      title: "Pro Students",
+      value: stats.proStudentUsers,
+      icon: <FaCrown  className="text-amber-500" />,
+      color: "from-amber-500/20 to-orange-600/20",
       change: "+15.2%",
       trend: "up",
     },
     {
-      title: "Revenue",
-      value: `$${stats.revenue.toLocaleString()}`,
-      icon: <FiDollarSign className="text-emerald-500" />,
-      color: "from-emerald-500/20 to-teal-600/20",
-      change: "+18.4%",
+      title: "Regular Students",
+      value: stats.studentUsers,
+      icon: <FiUser className="text-pink-500" />,
+      color: "from-pink-500/20 to-rose-600/20",
+      change: "+5.1%",
       trend: "up",
     },
   ];
@@ -324,9 +361,10 @@ const Dashboard = () => {
     admin: users.filter((u) => u.role === "admin" || u.role === "superadmin")
       .length,
     student: users.filter((u) => u.role === "student").length,
+    prostudent: users.filter((u) => u.role === "prostudent" || u.role === "pro_student" || u.role === "ProStudent").length,
     editor: users.filter((u) => u.role === "editor").length,
     other: users.filter(
-      (u) => !["admin", "superadmin", "student", "editor"].includes(u.role)
+      (u) => !["admin", "superadmin", "student", "prostudent", "pro_student", "ProStudent", "editor"].includes(u.role)
     ).length,
   };
 
@@ -385,7 +423,6 @@ const Dashboard = () => {
               <FiRefreshCw />
               Refresh
             </button>
-     
           </div>
         </div>
       </motion.div>
@@ -462,10 +499,11 @@ const Dashboard = () => {
                       className="px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500"
                     >
                       <option value="all">All Roles</option>
-                      <option value="admin">Admin</option>
-                      <option value="superadmin">Super Admin</option>
-                      <option value="student">Student</option>
-                      <option value="editor">Editor</option>
+                      {availableRoles.map((role) => (
+                        <option key={role.value} value={role.value}>
+                          {role.label}
+                        </option>
+                      ))}
                     </select>
                     <select
                       value={filterStatus}
@@ -585,12 +623,11 @@ const Dashboard = () => {
                                   onChange={handleEditChange}
                                   className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white"
                                 >
-                                  <option value="student">Student</option>
-                                  <option value="editor">Editor</option>
-                                  <option value="admin">Admin</option>
-                                  <option value="superadmin">
-                                    Super Admin
-                                  </option>
+                                  {availableRoles.map((role) => (
+                                    <option key={role.value} value={role.value}>
+                                      {role.label}
+                                    </option>
+                                  ))}
                                 </select>
                               </div>
                               <div>
@@ -687,7 +724,7 @@ const Dashboard = () => {
                     ) : (
                       // Normal View Row
                       <motion.tr
-                        key={user.uid}
+                        key={user._id}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         whileHover={{
@@ -725,18 +762,38 @@ const Dashboard = () => {
                           </div>
                         </td>
                         <td className="p-4">
-                          <span
-                            className={`px-3 py-1 rounded-full text-sm ${
-                              user.role === "admin" ||
-                              user.role === "superadmin"
-                                ? "bg-blue-500/20 text-blue-400"
-                                : user.role === "editor"
-                                ? "bg-purple-500/20 text-purple-400"
-                                : "bg-gray-500/20 text-gray-400"
-                            }`}
-                          >
-                            {user.role || "user"}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-3 py-1 rounded-full text-sm flex items-center ${getRoleColor(
+                                user.role
+                              )}`}
+                            >
+                              {getRoleIcon(user.role)}
+                              {user.role === "prostudent" || user.role === "pro_student" || user.role === "ProStudent"
+                                ? "Pro Student"
+                                : user.role || "user"}
+                            </span>
+                            {/* Quick Role Change Dropdown */}
+                            <div className="relative group">
+                              <button className="p-1 text-gray-400 hover:text-white hover:bg-white/10 rounded">
+                                <FiChevronDown className="w-4 h-4" />
+                              </button>
+                              <div className="absolute left-0 top-full mt-1 w-48 bg-gray-800 border border-white/10 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                                <div className="py-1">
+                                  {availableRoles.map((role) => (
+                                    <button
+                                      key={role.value}
+                                      onClick={() => handleQuickRoleChange(user._id, role.value)}
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-white/10 hover:text-white flex items-center gap-2"
+                                    >
+                                      <div className={`w-2 h-2 rounded-full ${role.color.split(' ')[0]}`}></div>
+                                      Change to {role.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </td>
                         <td className="p-4">
                           <select
@@ -826,14 +883,18 @@ const Dashboard = () => {
                       className={`w-3 h-3 rounded-full ${
                         role === "admin"
                           ? "bg-blue-500"
+                          : role === "prostudent"
+                          ? "bg-purple-500"
                           : role === "student"
                           ? "bg-green-500"
                           : role === "editor"
-                          ? "bg-purple-500"
+                          ? "bg-emerald-500"
                           : "bg-gray-500"
                       }`}
                     />
-                    <span className="text-gray-300 capitalize">{role}</span>
+                    <span className="text-gray-300 capitalize">
+                      {role === "prostudent" ? "Pro Student" : role}
+                    </span>
                   </div>
                   <div className="text-white font-bold">{count}</div>
                 </div>
@@ -847,7 +908,7 @@ const Dashboard = () => {
             <div className="space-y-4">
               {recentUsers.map((user) => (
                 <div
-                  key={user.uid}
+                  key={user._id}
                   className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors"
                 >
                   <div className="flex items-center gap-3">
@@ -859,7 +920,9 @@ const Dashboard = () => {
                         {user.name || "No Name"}
                       </p>
                       <p className="text-gray-400 text-sm">
-                        {user.role || "user"}
+                        {user.role === "prostudent" || user.role === "pro_student" || user.role === "ProStudent"
+                          ? "Pro Student"
+                          : user.role || "user"}
                       </p>
                     </div>
                   </div>
@@ -892,6 +955,27 @@ const Dashboard = () => {
                 <FiCheckCircle className="text-2xl text-green-400 mx-auto mb-2" />
                 <p className="text-white font-bold">{stats.activeUsers}</p>
                 <p className="text-gray-400 text-sm">Active</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Role Actions */}
+          <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            <h2 className="text-xl font-bold text-white mb-4">Quick Actions</h2>
+            <div className="space-y-3">
+              <p className="text-gray-300 text-sm mb-3">
+                Hover over user roles to quickly change them
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {availableRoles.map((role) => (
+                  <div
+                    key={role.value}
+                    className={`px-3 py-2 rounded-lg text-sm flex items-center justify-center gap-2 ${role.color}`}
+                  >
+                    <div className="w-2 h-2 rounded-full"></div>
+                    {role.label}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -948,9 +1032,27 @@ const Dashboard = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-gray-400 text-sm">Role</p>
-                  <p className="text-white font-medium">
-                    {selectedUser.role || "user"}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm flex items-center ${getRoleColor(
+                        selectedUser.role
+                      )}`}
+                    >
+                      {getRoleIcon(selectedUser.role)}
+                      {selectedUser.role === "prostudent" || selectedUser.role === "pro_student" || selectedUser.role === "ProStudent"
+                        ? "Pro Student"
+                        : selectedUser.role || "user"}
+                    </span>
+                    <button
+                      onClick={() => {
+                        setShowUserModal(false);
+                        handleEditUser(selectedUser);
+                      }}
+                      className="text-blue-400 hover:text-blue-300 text-sm"
+                    >
+                      Change
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <p className="text-gray-400 text-sm">Status</p>
@@ -1060,8 +1162,6 @@ const Dashboard = () => {
           </motion.div>
         </div>
       )}
-
-      
     </div>
   );
 };
