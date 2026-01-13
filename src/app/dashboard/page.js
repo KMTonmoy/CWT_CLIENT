@@ -8,7 +8,6 @@ import {
   FiEye,
   FiEdit2,
   FiTrash2,
-  FiUserPlus,
   FiTrendingUp,
   FiTrendingDown,
   FiCheckCircle,

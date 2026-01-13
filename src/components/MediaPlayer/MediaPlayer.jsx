@@ -8,7 +8,7 @@ import {
   VolumeX,
   SkipBack,
   SkipForward,
-  Pipette,
+  Frame ,
 } from "lucide-react";
 import { getContentIcon, getContentColor } from "@/utils/contentUtils";
 
@@ -439,7 +439,7 @@ const MediaPlayer = ({ selectedContent, selectedModule }) => {
                     className="p-2 text-white hover:bg-white/20 rounded-full transition-colors"
                     title="Picture in Picture"
                   >
-                    <Pipette className="w-5 h-5" />
+                    <Frame className="w-5 h-5" />
                   </button>
                   <button
                     onClick={toggleMute}
