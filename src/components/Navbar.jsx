@@ -207,7 +207,7 @@ const Navbar = () => {
                         </Link>
                       ) : (
                         <Link
-                          href="/my-classes"
+                          href="/class"
                           className="flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-[#1E3A8A] hover:text-white transition-colors border-b border-[#1E3A8A]/30"
                           onClick={() => setIsUserMenuOpen(false)}
                         >

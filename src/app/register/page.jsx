@@ -143,7 +143,7 @@ const RegisterPage = () => {
         
         // Redirect after successful registration
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push('/');
         }, 2000);
       }
     } catch (error) {
