@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useContext } from 'react'
 import axios from 'axios'
 import { AuthContext } from '@/AuthProvider/AuthProvider'
  
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://cwt-server.vercel.app'
 
 export const useUserData = () => {
   const { user } = useContext(AuthContext)

@@ -20,7 +20,7 @@ const MilestonesManagement = () => {
 
   const fetchMilestones = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/milestones");
+      const res = await axios.get("https://cwt-server.vercel.app/api/milestones");
       setMilestones(res.data);
     } catch {
       toast.error("Failed to load milestones");
@@ -43,10 +43,10 @@ const MilestonesManagement = () => {
     };
     try {
       if (editingId) {
-        await axios.put(`http://localhost:5000/api/milestones/${editingId}`, data);
+        await axios.put(`https://cwt-server.vercel.app/api/milestones/${editingId}`, data);
         toast.success("Updated");
       } else {
-        await axios.post("http://localhost:5000/api/milestones", { ...data, createdAt: new Date() });
+        await axios.post("https://cwt-server.vercel.app/api/milestones", { ...data, createdAt: new Date() });
         toast.success("Created");
       }
       resetForm(); fetchMilestones();
@@ -56,7 +56,7 @@ const MilestonesManagement = () => {
 
   const handleDelete = async (id) => {
     if (!confirm("Delete milestone?")) return;
-    await axios.delete(`http://localhost:5000/api/milestones/${id}`);
+    await axios.delete(`https://cwt-server.vercel.app/api/milestones/${id}`);
     toast.success("Deleted"); fetchMilestones();
   };
 

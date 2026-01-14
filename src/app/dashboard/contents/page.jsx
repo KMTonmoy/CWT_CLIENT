@@ -34,19 +34,19 @@ const ContentManagement = () => {
   const itemVariants = { hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 100 } } };
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/milestones").then(res => setMilestones(res.data)).catch(() => toast.error("Failed to load milestones"));
+    axios.get("https://cwt-server.vercel.app/api/milestones").then(res => setMilestones(res.data)).catch(() => toast.error("Failed to load milestones"));
   }, []);
 
   useEffect(() => {
     if (!milestoneId) { setModules([]); return; }
-    axios.get(`http://localhost:5000/api/modules/milestone/${milestoneId}`)
+    axios.get(`https://cwt-server.vercel.app/api/modules/milestone/${milestoneId}`)
       .then(res => { setModules(res.data); setSelectedMilestone(milestones.find(m => m._id === milestoneId)); })
       .catch(() => toast.error("Failed to load modules"));
   }, [milestoneId, milestones]);
 
   useEffect(() => {
     if (!moduleId) { setContents([]); setFilteredContents([]); return; }
-    axios.get(`http://localhost:5000/api/content/module/${moduleId}`)
+    axios.get(`https://cwt-server.vercel.app/api/content/module/${moduleId}`)
       .then(res => { setContents(res.data); setFilteredContents(res.data); setSelectedModule(modules.find(m => m._id === moduleId)); toast.success(`Loaded ${res.data.length} content items`); })
       .catch(() => toast.error("Failed to load contents"));
   }, [moduleId, modules]);
@@ -77,11 +77,11 @@ const ContentManagement = () => {
     setLoading(true); setUploadProgress(10);
     try {
       const progressInterval = setInterval(() => { setUploadProgress(prev => { if (prev >= 90) { clearInterval(progressInterval); return prev; } return prev + 10; }); }, 200);
-      await axios.post("http://localhost:5000/api/content/upload", formData, { onUploadProgress: (progressEvent) => setUploadProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total)) });
+      await axios.post("https://cwt-server.vercel.app/api/content/upload", formData, { onUploadProgress: (progressEvent) => setUploadProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total)) });
       clearInterval(progressInterval);
       setUploadProgress(100);
       toast.success("Content uploaded successfully!");
-      const res = await axios.get(`http://localhost:5000/api/content/module/${moduleId}`);
+      const res = await axios.get(`https://cwt-server.vercel.app/api/content/module/${moduleId}`);
       setContents(res.data);
       setTimeout(() => { resetForm(); setShowUploadForm(false); setTimeout(() => setShowUploadForm(true), 300); }, 1000);
     } catch (error) { toast.error("Upload failed: " + (error.response?.data?.message || error.message)); }
@@ -90,7 +90,7 @@ const ContentManagement = () => {
 
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this content?")) return;
-    try { await axios.delete(`http://localhost:5000/api/content/${id}`); toast.success("Content deleted successfully"); const res = await axios.get(`http://localhost:5000/api/content/module/${moduleId}`); setContents(res.data); }
+    try { await axios.delete(`https://cwt-server.vercel.app/api/content/${id}`); toast.success("Content deleted successfully"); const res = await axios.get(`https://cwt-server.vercel.app/api/content/module/${moduleId}`); setContents(res.data); }
     catch { toast.error("Failed to delete content"); }
   };
 

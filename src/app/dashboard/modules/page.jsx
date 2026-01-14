@@ -17,14 +17,14 @@ const ModulesManagement = () => {
 
   // Fetch milestones
   useEffect(() => {
-    axios.get("http://localhost:5000/api/milestones")
+    axios.get("https://cwt-server.vercel.app/api/milestones")
       .then(res => setMilestones(res.data));
   }, []);
 
   // Fetch modules when milestone changes
   useEffect(() => {
     if (!selectedMilestone) return;
-    axios.get(`http://localhost:5000/api/modules/milestone/${selectedMilestone}`)
+    axios.get(`https://cwt-server.vercel.app/api/modules/milestone/${selectedMilestone}`)
       .then(res => setModules(res.data));
   }, [selectedMilestone]);
 
@@ -47,12 +47,12 @@ const ModulesManagement = () => {
 
     try {
       if (editingId) {
-        await axios.put(`http://localhost:5000/api/modules/${editingId}`, data);
+        await axios.put(`https://cwt-server.vercel.app/api/modules/${editingId}`, data);
       } else {
-        await axios.post("http://localhost:5000/api/modules", data);
+        await axios.post("https://cwt-server.vercel.app/api/modules", data);
       }
       resetForm();
-      const res = await axios.get(`http://localhost:5000/api/modules/milestone/${selectedMilestone}`);
+      const res = await axios.get(`https://cwt-server.vercel.app/api/modules/milestone/${selectedMilestone}`);
       setModules(res.data);
     } catch {
       alert("Save failed");
@@ -62,8 +62,8 @@ const ModulesManagement = () => {
 
   const handleDelete = async (id) => {
     if (!confirm("Delete module?")) return;
-    await axios.delete(`http://localhost:5000/api/modules/${id}`);
-    const res = await axios.get(`http://localhost:5000/api/modules/milestone/${selectedMilestone}`);
+    await axios.delete(`https://cwt-server.vercel.app/api/modules/${id}`);
+    const res = await axios.get(`https://cwt-server.vercel.app/api/modules/milestone/${selectedMilestone}`);
     setModules(res.data);
   };
 

@@ -9,7 +9,7 @@ import { ChessQueen } from "lucide-react";
 import { FaCrown } from "react-icons/fa";
 
 const Dashboard = () => {
-  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://cwt-server.vercel.app";
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);

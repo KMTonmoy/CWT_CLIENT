@@ -25,7 +25,7 @@ const AuthProvider = ({ children }) => {
   const router = useRouter();
 
   // Base URL for backend
-  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://cwt-server.vercel.app';
 
   // Register user with complete data
   const registerUser = async (userData) => {

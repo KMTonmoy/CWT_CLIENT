@@ -27,7 +27,7 @@ export default function ClassroomPage() {
   const [showContentList, setShowContentList] = useState(false);
   const [showAccessModal, setShowAccessModal] = useState(false);
 
-  const API_BASE_URL = "http://localhost:5000/api";
+  const API_BASE_URL = "https://cwt-server.vercel.app/api";
 
   // Check if user has prostudent role
   useEffect(() => {
