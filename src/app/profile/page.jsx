@@ -14,10 +14,10 @@ import {
   FiClock,
   FiAlertCircle,
 } from "react-icons/fi";
-  
- 
+
+
 const Profile = () => {
-   
+
   const { user } = useContext(AuthContext);
   const [profileData, setProfileData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -266,14 +266,15 @@ const Profile = () => {
       setUploadingPhoto(true);
       setUploadProgress(0);
 
+      // Use FormData to send the file
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-      formData.append("cloud_name", CLOUDINARY_CLOUD_NAME);
-      formData.append("folder", "cwt-profiles");
+      formData.append("photo", file);
+      formData.append("uid", user.uid);
+
+      console.log("Uploading profile photo via server...");
 
       const response = await axios.post(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        `${BASE_URL}/api/users/upload-photo`,
         formData,
         {
           headers: {
@@ -288,22 +289,22 @@ const Profile = () => {
         }
       );
 
-      if (response.data.secure_url) {
-        const updateResponse = await axios.patch(
-          `${BASE_URL}/api/users/uid/${user.uid}`,
-          { photoURL: response.data.secure_url }
-        );
+      console.log("Upload response:", response.data);
 
-        if (updateResponse.data.success) {
-          setProfileData((prev) => ({
-            ...prev,
-            photoURL: response.data.secure_url,
-          }));
-          setMessage({
-            type: "success",
-            text: "Profile photo updated successfully!",
-          });
-        }
+      if (response.data.success && response.data.photoURL) {
+        setProfileData((prev) => ({
+          ...prev,
+          photoURL: response.data.photoURL,
+        }));
+        setMessage({
+          type: "success",
+          text: "Profile photo updated successfully!",
+        });
+      } else {
+        setMessage({
+          type: "error",
+          text: response.data.message || "Failed to update photo",
+        });
       }
     } catch (error) {
       console.error("Error uploading photo:", error);
@@ -439,11 +440,10 @@ const Profile = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setIsEditing(!isEditing)}
-                className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors ${
-                  isEditing
+                className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors ${isEditing
                     ? "bg-red-600 hover:bg-red-700 text-white"
                     : "bg-blue-600 hover:bg-blue-700 text-white"
-                }`}
+                  }`}
               >
                 {isEditing ? (
                   <>
@@ -475,16 +475,14 @@ const Profile = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
-              message.type === "success"
+            className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${message.type === "success"
                 ? "bg-green-500/20 border border-green-500/30 text-green-400"
                 : "bg-red-500/20 border border-red-500/30 text-red-400"
-            }`}
+              }`}
           >
             <div
-              className={`w-2 h-2 rounded-full ${
-                message.type === "success" ? "bg-green-400" : "bg-red-400"
-              }`}
+              className={`w-2 h-2 rounded-full ${message.type === "success" ? "bg-green-400" : "bg-red-400"
+                }`}
             ></div>
             <span>{message.text}</span>
           </motion.div>
@@ -559,11 +557,10 @@ const Profile = () => {
 
                 <div className="flex flex-wrap gap-2 mb-6">
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      profileData.status === "active"
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${profileData.status === "active"
                         ? "bg-green-500/20 text-green-400"
                         : "bg-red-500/20 text-red-400"
-                    }`}
+                      }`}
                   >
                     {profileData.status?.charAt(0)?.toUpperCase() +
                       profileData.status?.slice(1) || "Active"}
@@ -618,27 +615,15 @@ const Profile = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Email Verified</span>
                   <span
-                    className={`px-2 py-1 rounded text-xs font-medium ${
-                      profileData.emailVerified
+                    className={`px-2 py-1 rounded text-xs font-medium ${profileData.emailVerified
                         ? "bg-green-500/20 text-green-400"
                         : "bg-red-500/20 text-red-400"
-                    }`}
+                      }`}
                   >
                     {profileData.emailVerified ? "Verified" : "Not Verified"}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Phone Verified</span>
-                  <span
-                    className={`px-2 py-1 rounded text-xs font-medium ${
-                      profileData.phoneVerified
-                        ? "bg-green-500/20 text-green-400"
-                        : "bg-red-500/20 text-red-400"
-                    }`}
-                  >
-                    {profileData.phoneVerified ? "Verified" : "Not Verified"}
-                  </span>
-                </div>
+        
               </div>
             </motion.div>
           </div>
@@ -662,11 +647,10 @@ const Profile = () => {
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`p-2 rounded-full ${
-                            verificationStatus.isVerified
+                          className={`p-2 rounded-full ${verificationStatus.isVerified
                               ? "bg-green-500/20"
                               : "bg-yellow-500/20"
-                          }`}
+                            }`}
                         >
                           {verificationStatus.isVerified ? (
                             <FiCheck className="text-green-400" size={20} />
@@ -679,17 +663,16 @@ const Profile = () => {
                             {profileData.email}
                           </p>
                           <p
-                            className={`text-sm ${
-                              verificationStatus.isVerified
+                            className={`text-sm ${verificationStatus.isVerified
                                 ? "text-green-400"
                                 : "text-yellow-400"
-                            }`}
+                              }`}
                           >
                             {verificationStatus.isVerified
                               ? "✓ Email verified"
                               : verificationStatus.isPending
-                              ? "⏳ Verification pending"
-                              : "⚠️ Email not verified"}
+                                ? "⏳ Verification pending"
+                                : "⚠️ Email not verified"}
                           </p>
                         </div>
                       </div>
@@ -698,11 +681,10 @@ const Profile = () => {
                         <button
                           onClick={sendVerificationCode}
                           disabled={isSendingCode || countdown > 0}
-                          className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors ${
-                            countdown > 0
+                          className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors ${countdown > 0
                               ? "bg-gray-700 text-gray-400 cursor-not-allowed"
                               : "bg-blue-600 hover:bg-blue-700 text-white"
-                          }`}
+                            }`}
                         >
                           {isSendingCode ? (
                             <>
